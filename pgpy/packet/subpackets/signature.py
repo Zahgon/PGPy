@@ -64,30 +64,25 @@ __all__ = ['URI',
 class URI(Signature):
     @sdproperty
     def uri(self):
-        pass
+        raise NotImplementedError
 
     @uri.register(str)
     @uri.register(str)
     def uri_str(self, val):
-        pass
+        raise NotImplementedError
 
     @uri.register(bytearray)
     def uri_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(URI, self).__init__()
-        self.uri = ""
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(URI, self).__bytearray__()
-        _bytes += self.uri.encode()
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(URI, self).parse(packet)
-        self.uri = packet[:(self.header.length - 1)]
-        del packet[:(self.header.length - 1)]
+        raise NotImplementedError
 
 
 class FlagList(Signature):
@@ -95,12 +90,12 @@ class FlagList(Signature):
 
     @sdproperty
     def flags(self):
-        pass
+        raise NotImplementedError
 
     @flags.register(list)
     @flags.register(tuple)
     def flags_list(self, val):
-        pass
+        raise NotImplementedError
 
     @flags.register(int)
     @flags.register(CompressionAlgorithm)
@@ -108,26 +103,20 @@ class FlagList(Signature):
     @flags.register(PubKeyAlgorithm)
     @flags.register(SymmetricKeyAlgorithm)
     def flags_int(self, val):
-        pass
+        raise NotImplementedError
 
     @flags.register(bytearray)
     def flags_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(FlagList, self).__init__()
-        self.flags = []
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(FlagList, self).__bytearray__()
-        _bytes += b''.join(self.int_to_bytes(b) for b in self.flags)
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(FlagList, self).parse(packet)
-        for i in range(0, self.header.length - 1):
-            self.flags = packet[:1]
-            del packet[:1]
+        raise NotImplementedError
 
 
 class ByteFlag(Signature):
@@ -135,74 +124,60 @@ class ByteFlag(Signature):
 
     @sdproperty
     def flags(self):
-        pass
+        raise NotImplementedError
 
     @flags.register(set)
     @flags.register(list)
     def flags_seq(self, val):
-        pass
+        raise NotImplementedError
 
     @flags.register(int)
     @flags.register(_KeyFlags)
     @flags.register(_Features)
     def flags_int(self, val):
-        pass
+        raise NotImplementedError
 
     @flags.register(bytearray)
     def flags_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(ByteFlag, self).__init__()
-        self.flags = []
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(ByteFlag, self).__bytearray__()
-        _bytes += self.int_to_bytes(sum(self.flags))
-        # null-pad _bytes if they are not up to the end now
-        if len(_bytes) < len(self):
-            _bytes += b'\x00' * (len(self) - len(_bytes))
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(ByteFlag, self).parse(packet)
-        for i in range(0, self.header.length - 1):
-            self.flags = packet[:1]
-            del packet[:1]
+        raise NotImplementedError
 
 
 class Boolean(Signature):
     @sdproperty
     def bflag(self):
-        pass
+        raise NotImplementedError
 
     @bflag.register(bool)
     def bflag_bool(self, val):
-        pass
+        raise NotImplementedError
 
     @bflag.register(bytearray)
     def bflag_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(Boolean, self).__init__()
-        self.bflag = False
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(Boolean, self).__bytearray__()
-        _bytes += self.int_to_bytes(int(self.bflag))
-        return _bytes
+        raise NotImplementedError
 
     def __bool__(self):
-        return self.bflag
+        raise NotImplementedError
 
     def __nonzero__(self):
-        return self.__bool__()
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(Boolean, self).parse(packet)
-        self.bflag = packet[:1]
-        del packet[:1]
+        raise NotImplementedError
 
 
 class CreationTime(Signature):
@@ -219,33 +194,28 @@ class CreationTime(Signature):
 
     @sdproperty
     def created(self):
-        pass
+        raise NotImplementedError
 
     @created.register(datetime)
     def created_datetime(self, val):
-        pass
+        raise NotImplementedError
 
     @created.register(int)
     def created_int(self, val):
-        pass
+        raise NotImplementedError
 
     @created.register(bytearray)
     def created_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(CreationTime, self).__init__()
-        self.created = datetime.now(timezone.utc)
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(CreationTime, self).__bytearray__()
-        _bytes += self.int_to_bytes(calendar.timegm(self.created.utctimetuple()), 4)
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(CreationTime, self).parse(packet)
-        self.created = packet[:4]
-        del packet[:4]
+        raise NotImplementedError
 
 
 class SignatureExpirationTime(Signature):
@@ -262,33 +232,28 @@ class SignatureExpirationTime(Signature):
 
     @sdproperty
     def expires(self):
-        pass
+        raise NotImplementedError
 
     @expires.register(timedelta)
     def expires_timedelta(self, val):
-        pass
+        raise NotImplementedError
 
     @expires.register(int)
     def expires_int(self, val):
-        pass
+        raise NotImplementedError
 
     @expires.register(bytearray)
     def expires_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(SignatureExpirationTime, self).__init__()
-        self.expires = 0
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(SignatureExpirationTime, self).__bytearray__()
-        _bytes += self.int_to_bytes(int(self.expires.total_seconds()), 4)
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(SignatureExpirationTime, self).parse(packet)
-        self.expires = packet[:4]
-        del packet[:4]
+        raise NotImplementedError
 
 
 class ExportableCertification(Boolean):
@@ -347,46 +312,37 @@ class TrustSignature(Signature):
 
     @sdproperty
     def level(self):
-        pass
+        raise NotImplementedError
 
     @level.register(int)
     def level_int(self, val):
-        pass
+        raise NotImplementedError
 
     @level.register(bytearray)
     def level_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def amount(self):
-        pass
+        raise NotImplementedError
 
     @amount.register(int)
     def amount_int(self, val):
         # clamp 'val' to the range 0-255
-        pass
+        raise NotImplementedError
 
     @amount.register(bytearray)
     def amount_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(TrustSignature, self).__init__()
-        self.level = 0
-        self.amount = 0
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(TrustSignature, self).__bytearray__()
-        _bytes += self.int_to_bytes(self.level)
-        _bytes += self.int_to_bytes(self.amount)
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(TrustSignature, self).parse(packet)
-        self.level = packet[:1]
-        del packet[:1]
-        self.amount = packet[:1]
-        del packet[:1]
+        raise NotImplementedError
 
 
 class RegularExpression(Signature):
@@ -407,30 +363,25 @@ class RegularExpression(Signature):
 
     @sdproperty
     def regex(self):
-        pass
+        raise NotImplementedError
 
     @regex.register(str)
     @regex.register(str)
     def regex_str(self, val):
-        pass
+        raise NotImplementedError
 
     @regex.register(bytearray)
     def regex_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(RegularExpression, self).__init__()
-        self.regex = r''
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(RegularExpression, self).__bytearray__()
-        _bytes += self.regex.encode()
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(RegularExpression, self).parse(packet)
-        self.regex = packet[:(self.header.length - 1)]
-        del packet[:(self.header.length - 1)]
+        raise NotImplementedError
 
 
 class Revocable(Boolean):
@@ -507,69 +458,56 @@ class RevocationKey(Signature):
 
     @sdproperty
     def keyclass(self):
-        pass
+        raise NotImplementedError
 
     @keyclass.register(list)
     def keyclass_list(self, val):
-        pass
+        raise NotImplementedError
 
     @keyclass.register(int)
     @keyclass.register(RevocationKeyClass)
     def keyclass_int(self, val):
-        pass
+        raise NotImplementedError
 
     @keyclass.register(bytearray)
     def keyclass_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def algorithm(self):
-        pass
+        raise NotImplementedError
 
     @algorithm.register(int)
     @algorithm.register(PubKeyAlgorithm)
     def algorithm_int(self, val):
-        pass
+        raise NotImplementedError
 
     @algorithm.register(bytearray)
     def algorithm_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def fingerprint(self):
-        pass
+        raise NotImplementedError
 
     @fingerprint.register(str)
     @fingerprint.register(str)
     @fingerprint.register(Fingerprint)
     def fingerprint_str(self, val):
-        pass
+        raise NotImplementedError
 
     @fingerprint.register(bytearray)
     def fingerprint_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(RevocationKey, self).__init__()
-        self.keyclass = []
-        self.algorithm = PubKeyAlgorithm.Invalid
-        self._fingerprint = ""
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(RevocationKey, self).__bytearray__()
-        _bytes += self.int_to_bytes(sum(self.keyclass))
-        _bytes += self.int_to_bytes(self.algorithm.value)
-        _bytes += self.fingerprint.__bytes__()
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(RevocationKey, self).parse(packet)
-        self.keyclass = packet[:1]
-        del packet[:1]
-        self.algorithm = packet[:1]
-        del packet[:1]
-        self.fingerprint = packet[:20]
-        del packet[:20]
+        raise NotImplementedError
 
 
 class Issuer(Signature):
@@ -577,25 +515,20 @@ class Issuer(Signature):
 
     @sdproperty
     def issuer(self):
-        pass
+        raise NotImplementedError
 
     @issuer.register(bytearray)
     def issuer_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(Issuer, self).__init__()
-        self.issuer = bytearray()
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(Issuer, self).__bytearray__()
-        _bytes += binascii.unhexlify(self._issuer.encode())
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(Issuer, self).parse(packet)
-        self.issuer = packet[:8]
-        del packet[:8]
+        raise NotImplementedError
 
 
 class NotationData(Signature):
@@ -603,74 +536,55 @@ class NotationData(Signature):
 
     @sdproperty
     def flags(self):
-        pass
+        raise NotImplementedError
 
     @flags.register(list)
     def flags_list(self, val):
-        pass
+        raise NotImplementedError
 
     @flags.register(int)
     @flags.register(NotationDataFlags)
     def flags_int(self, val):
-        pass
+        raise NotImplementedError
 
     @flags.register(bytearray)
     def flags_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def name(self):
-        pass
+        raise NotImplementedError
 
     @name.register(str)
     @name.register(str)
     def name_str(self, val):
-        pass
+        raise NotImplementedError
 
     @name.register(bytearray)
     def name_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def value(self):
-        pass
+        raise NotImplementedError
 
     @value.register(str)
     @value.register(str)
     def value_str(self, val):
-        pass
+        raise NotImplementedError
 
     @value.register(bytearray)
     def value_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(NotationData, self).__init__()
-        self.flags = [0, 0, 0, 0]
-        self.name = ""
-        self.value = ""
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(NotationData, self).__bytearray__()
-        _bytes += self.int_to_bytes(sum(self.flags)) + b'\x00\x00\x00'
-        _bytes += self.int_to_bytes(len(self.name), 2)
-        _bytes += self.int_to_bytes(len(self.value), 2)
-        _bytes += self.name.encode()
-        _bytes += self.value if isinstance(self.value, bytearray) else self.value.encode()
-        return bytes(_bytes)
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(NotationData, self).parse(packet)
-        self.flags = packet[:1]
-        del packet[:4]
-        nlen = self.bytes_to_int(packet[:2])
-        del packet[:2]
-        vlen = self.bytes_to_int(packet[:2])
-        del packet[:2]
-        self.name = packet[:nlen]
-        del packet[:nlen]
-        self.value = packet[:vlen]
-        del packet[:vlen]
+        raise NotImplementedError
 
 
 class PreferredHashAlgorithms(FlagList):
@@ -701,35 +615,30 @@ class PrimaryUserID(SubkeyBindingSignature):
 
     @sdproperty
     def primary(self):
-        pass
+        raise NotImplementedError
 
     @primary.register(bool)
     def primary_bool(self, val):
-        pass
+        raise NotImplementedError
 
     @primary.register(bytearray)
     def primary_byrearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(PrimaryUserID, self).__init__()
-        self.primary = True
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(PrimaryUserID, self).__bytearray__()
-        _bytes += self.int_to_bytes(int(self.primary))
-        return _bytes
+        raise NotImplementedError
 
     def __bool__(self):
-        return self.primary
+        raise NotImplementedError
 
     def __nonzero__(self):
-        return self.__bool__()
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(PrimaryUserID, self).parse(packet)
-        self.primary = packet[:1]
-        del packet[:1]
+        raise NotImplementedError
 
 
 class Policy(URI):
@@ -746,30 +655,25 @@ class SignersUserID(Signature):
 
     @sdproperty
     def userid(self):
-        pass
+        raise NotImplementedError
 
     @userid.register(str)
     @userid.register(str)
     def userid_str(self, val):
-        pass
+        raise NotImplementedError
 
     @userid.register(bytearray)
     def userid_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(SignersUserID, self).__init__()
-        self.userid = ""
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(SignersUserID, self).__bytearray__()
-        _bytes += self.userid.encode()
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(SignersUserID, self).parse(packet)
-        self.userid = packet[:(self.header.length - 1)]
-        del packet[:(self.header.length - 1)]
+        raise NotImplementedError
 
 
 class ReasonForRevocation(Signature):
@@ -777,47 +681,38 @@ class ReasonForRevocation(Signature):
 
     @sdproperty
     def code(self):
-        pass
+        raise NotImplementedError
 
     @code.register(int)
     @code.register(RevocationReason)
     def code_int(self, val):
-        pass
+        raise NotImplementedError
 
     @code.register(bytearray)
     def code_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def string(self):
-        return self._string
+        raise NotImplementedError
 
     @string.register(str)
     @string.register(str)
     def string_str(self, val):
-        pass
+        raise NotImplementedError
 
     @string.register(bytearray)
     def string_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(ReasonForRevocation, self).__init__()
-        self.code = 0x00
-        self.string = ""
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(ReasonForRevocation, self).__bytearray__()
-        _bytes += self.int_to_bytes(self.code)
-        _bytes += self.string.encode()
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(ReasonForRevocation, self).parse(packet)
-        self.code = packet[:1]
-        del packet[:1]
-        self.string = packet[:(self.header.length - 2)]
-        del packet[:(self.header.length - 2)]
+        raise NotImplementedError
 
 
 class Features(ByteFlag):
@@ -833,52 +728,48 @@ class EmbeddedSignature(Signature):
 
     @sdproperty
     def _sig(self):
-        pass
+        raise NotImplementedError
 
     @_sig.setter
     def _sig(self, val):
-        pass
+        raise NotImplementedError
 
     @property
     def sigtype(self):
-        pass
+        raise NotImplementedError
 
     @property
     def pubalg(self):
-        pass
+        raise NotImplementedError
 
     @property
     def halg(self):
-        pass
+        raise NotImplementedError
 
     @property
     def subpackets(self):
-        pass
+        raise NotImplementedError
 
     @property
     def hash2(self):  # pragma: no cover
-        pass
+        raise NotImplementedError
 
     @property
     def signature(self):
-        return self._sig.signature
+        raise NotImplementedError
 
     @property
     def signer(self):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(EmbeddedSignature, self).__init__()
-        from ..packets import SignatureV4
-        self._sigpkt = SignatureV4()
-        self._sigpkt.header = EmbeddedSignatureHeader()
+        raise NotImplementedError
 
     def __bytearray__(self):
-        return super(EmbeddedSignature, self).__bytearray__() + self._sigpkt.__bytearray__()
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(EmbeddedSignature, self).parse(packet)
-        self._sig.parse(packet)
+        raise NotImplementedError
 
 
 class IssuerFingerprint(Signature):
@@ -901,55 +792,38 @@ class IssuerFingerprint(Signature):
 
     @sdproperty
     def version(self):
-        pass
+        raise NotImplementedError
 
     @version.register(int)
     def version_int(self, val):
-        pass
+        raise NotImplementedError
 
     @version.register(bytearray)
     def version_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def issuer_fingerprint(self):
-        pass
+        raise NotImplementedError
 
     @issuer_fingerprint.register(str)
     @issuer_fingerprint.register(str)
     @issuer_fingerprint.register(Fingerprint)
     def issuer_fingerprint_str(self, val):
-        pass
+        raise NotImplementedError
 
     @issuer_fingerprint.register(bytearray)
     def issuer_fingerprint_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(IssuerFingerprint, self).__init__()
-        self.version = 4
-        self._issuer_fpr = ""
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(IssuerFingerprint, self).__bytearray__()
-        _bytes += self.int_to_bytes(self.version)
-        _bytes += self.issuer_fingerprint.__bytes__()
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(IssuerFingerprint, self).parse(packet)
-        self.version = packet[:1]
-        del packet[:1]
-
-        if self.version == 4:
-            fpr_len = 20
-        elif self.version == 5:  # pragma: no cover
-            fpr_len = 32
-        else:  # pragma: no cover
-            fpr_len = self.header.length - 1
-
-        self.issuer_fingerprint = packet[:fpr_len]
-        del packet[:fpr_len]
+        raise NotImplementedError
 
 
 class IntendedRecipient(Signature):
@@ -973,55 +847,38 @@ class IntendedRecipient(Signature):
 
     @sdproperty
     def version(self):
-        pass
+        raise NotImplementedError
 
     @version.register(int)
     def version_int(self, val):
-        pass
+        raise NotImplementedError
 
     @version.register(bytearray)
     def version_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def intended_recipient(self):
-        pass
+        raise NotImplementedError
 
     @intended_recipient.register(str)
     @intended_recipient.register(str)
     @intended_recipient.register(Fingerprint)
     def intended_recipient_str(self, val):
-        pass
+        raise NotImplementedError
 
     @intended_recipient.register(bytearray)
     def intended_recipient_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(IntendedRecipient, self).__init__()
-        self.version = 4
-        self._intended_recipient = ""
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(IntendedRecipient, self).__bytearray__()
-        _bytes += self.int_to_bytes(self.version)
-        _bytes += self.intended_recipient.__bytes__()
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(IntendedRecipient, self).parse(packet)
-        self.version = packet[:1]
-        del packet[:1]
-
-        if self.version == 4:
-            fpr_len = 20
-        elif self.version == 5:  # pragma: no cover
-            fpr_len = 32
-        else:  # pragma: no cover
-            fpr_len = self.header.length - 1
-
-        self.intended_recipient = packet[:fpr_len]
-        del packet[:fpr_len]
+        raise NotImplementedError
 
 
 class AttestedCertifications(Signature):
@@ -1102,23 +959,18 @@ class AttestedCertifications(Signature):
 
     @sdproperty
     def attested_certifications(self):
-        pass
+        raise NotImplementedError
 
     @attested_certifications.register(bytearray)
     @attested_certifications.register(bytes)
     def attested_certifications_bytearray(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(AttestedCertifications, self).__init__()
-        self._attested_certifications = bytearray()
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(AttestedCertifications, self).__bytearray__()
-        _bytes += self._attested_certifications
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(AttestedCertifications, self).parse(packet)
-        self.attested_certifications = packet[:(self.header.length - 1)]
-        del packet[:(self.header.length - 1)]
+        raise NotImplementedError

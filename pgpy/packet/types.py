@@ -30,31 +30,25 @@ __all__ = ['Header',
 class Header(_Header):
     @sdproperty
     def tag(self):
-        pass
+        raise NotImplementedError
 
     @tag.register(int)
     @tag.register(PacketTag)
     def tag_int(self, val):
-        pass
+        raise NotImplementedError
 
     @property
     def typeid(self):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(Header, self).__init__()
-        self.tag = 0x00
+        raise NotImplementedError
 
     def __bytearray__(self):
-        tag = 0x80 | (self._lenfmt << 6)
-        tag |= (self.tag) if self._lenfmt else ((self.tag << 2) | {1: 0, 2: 1, 4: 2, 0: 3}[self.llen])
-
-        _bytes = bytearray(self.int_to_bytes(tag))
-        _bytes += self.encode_length(self.length, self._lenfmt, self.llen)
-        return _bytes
+        raise NotImplementedError
 
     def __len__(self):
-        return 1 + self.llen
+        raise NotImplementedError
 
     def parse(self, packet):
         """
@@ -94,45 +88,26 @@ class Header(_Header):
 
         :param packet: raw packet bytes
         """
-        self._lenfmt = ((packet[0] & 0x40) >> 6)
-        self.tag = packet[0]
-        if self._lenfmt == 0:
-            self.llen = (packet[0] & 0x03)
-        del packet[0]
-
-        if (self._lenfmt == 0 and self.llen > 0) or self._lenfmt == 1:
-            self.length = packet
-
-        else:
-            # indeterminate packet length
-            self.length = len(packet)
+        raise NotImplementedError
 
 
 class VersionedHeader(Header):
     @sdproperty
     def version(self):
-        pass
+        raise NotImplementedError
 
     @version.register(int)
     def version_int(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(VersionedHeader, self).__init__()
-        self.version = 0
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray(super(VersionedHeader, self).__bytearray__())
-        _bytes += bytearray([self.version])
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):  # pragma: no cover
-        if self.tag == 0:
-            super(VersionedHeader, self).parse(packet)
-
-        if self.version == 0:
-            self.version = packet[0]
-            del packet[0]
+        raise NotImplementedError
 
 
 class Packet(Dispatchable):
@@ -140,41 +115,34 @@ class Packet(Dispatchable):
     __headercls__ = Header
 
     def __init__(self, _=None):
-        super(Packet, self).__init__()
-        self.header = self.__headercls__()
-        if isinstance(self.__typeid__, int):
-            self.header.tag = self.__typeid__
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __bytearray__(self):
-        return self.header.__bytearray__()
+        raise NotImplementedError
 
     def __len__(self):
-        return len(self.header) + self.header.length
+        raise NotImplementedError
 
     def __repr__(self):
-        return "<{cls:s} [tag {tag:02d}] at 0x{id:x}>".format(cls=self.__class__.__name__, tag=self.header.tag, id=id(self))
+        raise NotImplementedError
 
     def update_hlen(self):
-        self.header.length = len(self.__bytearray__()) - len(self.header)
+        raise NotImplementedError
 
     @abc.abstractmethod
     def parse(self, packet):
-        if self.header.tag == 0:
-            self.header.parse(packet)
+        raise NotImplementedError
 
 
 class VersionedPacket(Packet):
     __headercls__ = VersionedHeader
 
     def __init__(self):
-        super(VersionedPacket, self).__init__()
-        if isinstance(self.__ver__, int):
-            self.header.version = self.__ver__
+        raise NotImplementedError
 
     def __repr__(self):
-        return "<{cls:s} [tag {tag:02d}][v{ver:d}] at 0x{id:x}>".format(cls=self.__class__.__name__, tag=self.header.tag,
-                                                                        ver=self.header.version, id=id(self))
+        raise NotImplementedError
 
 
 class Opaque(Packet):
@@ -182,30 +150,21 @@ class Opaque(Packet):
 
     @sdproperty
     def payload(self):
-        pass
+        raise NotImplementedError
 
     @payload.register(bytearray)
     @payload.register(bytes)
     def payload_bin(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(Opaque, self).__init__()
-        self.payload = b''
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(Opaque, self).__bytearray__()
-        _bytes += self.payload
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):  # pragma: no cover
-        super(Opaque, self).parse(packet)
-        pend = self.header.length
-        if hasattr(self.header, 'version'):
-            pend -= 1
-
-        self.payload = packet[:pend]
-        del packet[:pend]
+        raise NotImplementedError
 
 
 # key marker classes for convenience
@@ -235,28 +194,16 @@ long = int
 
 class MPI(long):
     def __new__(cls, num):
-        mpi = num
-
-        if isinstance(num, (bytes, bytearray)):
-            if isinstance(num, bytes):  # pragma: no cover
-                num = bytearray(num)
-
-            fl = ((MPIs.bytes_to_int(num[:2]) + 7) // 8)
-            del num[:2]
-
-            mpi = MPIs.bytes_to_int(num[:fl])
-            del num[:fl]
-
-        return super(MPI, cls).__new__(cls, mpi)
+        raise NotImplementedError
 
     def byte_length(self):
-        return ((self.bit_length() + 7) // 8)
+        raise NotImplementedError
 
     def to_mpibytes(self):
-        return MPIs.int_to_bytes(self.bit_length(), 2) + MPIs.int_to_bytes(self, self.byte_length())
+        raise NotImplementedError
 
     def __len__(self):
-        return self.byte_length() + 2
+        raise NotImplementedError
 
 
 class MPIs(Field):
@@ -265,16 +212,11 @@ class MPIs(Field):
     __mpis__ = ()
 
     def __len__(self):
-        return sum(len(i) for i in self)
+        raise NotImplementedError
 
     def __iter__(self):
         """yield all components of an MPI so it can be iterated over"""
-        for i in self.__mpis__:
-            yield getattr(self, i)
+        raise NotImplementedError
 
     def __copy__(self):
-        pk = self.__class__()
-        for m in self.__mpis__:
-            setattr(pk, m, copy.copy(getattr(self, m)))
-
-        return pk
+        raise NotImplementedError

@@ -44,7 +44,7 @@ def sdmethod(meth):
     sd = singledispatch(meth)
 
     def wrapper(obj, *args, **kwargs):
-        pass
+        return sd.dispatch(args[0].__class__)(obj, *args, **kwargs)
 
     wrapper.register = sd.register
     wrapper.dispatch = sd.dispatch
@@ -63,7 +63,8 @@ def sdproperty(fget):
             return self.fset.register(cls, fset)
 
         def setter(self, fset):
-            pass
+            self.register(object, fset)
+            return type(self)(self.fget, self.fset, self.fdel, self.__doc__)
 
     return SDProperty(fget, sdmethod(defset))
 
@@ -76,14 +77,57 @@ class KeyAction(object):
 
     @contextlib.contextmanager
     def usage(self, key, user):
-        pass
+        def _preiter(first, iterable):
+            yield first
+            for item in iterable:
+                yield item
+
+        em = {}
+        em['keyid'] = key.fingerprint.keyid
+        em['flags'] = ', '.join(flag.name for flag in self.flags)
+
+        if len(self.flags):
+            for _key in _preiter(key, key.subkeys.values()):
+                if self.flags & set(_key._get_key_flags(user)):
+                    break
+
+            else:  # pragma: no cover
+                warning = "Key {keyid:s} does not have the required usage flag {flags:s}".format(**em)
+                if key._require_usage_flags:
+                    raise PGPError(warning)
+                else:
+                    logging.warning(warning)
+
+        else:
+            _key = key
+
+        if _key is not key:
+            em['subkeyid'] = _key.fingerprint.keyid
+            logging.debug("Key {keyid:s} does not have the required usage flag {flags:s}; using subkey {subkeyid:s}"
+                          "".format(**em))  # TODO: consider adding stacklevel=4 when we only support Python >= 3.8
+
+        yield _key
 
     def check_attributes(self, key):
-        pass
+        for attr, expected in self.conditions.items():
+            if getattr(key, attr) != expected:
+                raise PGPError("Expected: {attr:s} == {eval:s}. Got: {got:s}"
+                               "".format(attr=attr, eval=str(expected), got=str(getattr(key, attr))))
 
     def __call__(self, action):
         @functools.wraps(action)
         def _action(key, *args, **kwargs):
-            pass
+            if key._key is None:
+                raise PGPError("No key!")
+
+            # if a key is in the process of being created, it needs to be allowed to certify its own user id
+            if len(key._uids) == 0 and key.is_primary and action is not key.certify.__wrapped__:
+                raise PGPError("Key is not complete - please add a User ID!")
+
+            with self.usage(key, kwargs.get('user', None)) as _key:
+                self.check_attributes(key)
+
+                # do the thing
+                return action(_key, *args, **kwargs)
 
         return _action

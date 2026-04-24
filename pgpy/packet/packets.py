@@ -158,64 +158,38 @@ class PKESessionKeyV3(PKESessionKey):
 
     @sdproperty
     def encrypter(self):
-        pass
+        raise NotImplementedError
 
     @encrypter.register(bytearray)
     def encrypter_bin(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def pkalg(self):
-        pass
+        raise NotImplementedError
 
     @pkalg.register(int)
     @pkalg.register(PubKeyAlgorithm)
     def pkalg_int(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(PKESessionKeyV3, self).__init__()
-        self.encrypter = bytearray(8)
-        self.pkalg = 0
-        self.ct = None
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(PKESessionKeyV3, self).__bytearray__()
-        _bytes += binascii.unhexlify(self.encrypter.encode())
-        _bytes += bytearray([self.pkalg])
-        _bytes += self.ct.__bytearray__() if self.ct is not None else b'\x00' * (self.header.length - 10)
-        return _bytes
+        raise NotImplementedError
 
     def __copy__(self):
-        sk = self.__class__()
-        sk.header = copy.copy(self.header)
-        sk._encrypter = self._encrypter
-        sk.pkalg = self.pkalg
-        if self.ct is not None:
-            sk.ct = copy.copy(self.ct)
-
-        return sk
+        raise NotImplementedError
 
     def decrypt_sk(self, pk):
-        pass
+        raise NotImplementedError
 
     def encrypt_sk(self, pk, symalg, symkey):
-        pass
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(PKESessionKeyV3, self).parse(packet)
-        self.encrypter = packet[:8]
-        del packet[:8]
-
-        self.pkalg = packet[0]
-        del packet[0]
-
-        if self.ct is not None:
-            self.ct.parse(packet)
-
-        else:  # pragma: no cover
-            del packet[:(self.header.length - 18)]
+        raise NotImplementedError
 
 
 class Signature(VersionedPacket):
@@ -276,63 +250,48 @@ class SignatureV4(Signature):
 
     @sdproperty
     def sigtype(self):
-        pass
+        raise NotImplementedError
 
     @sigtype.register(int)
     @sigtype.register(SignatureType)
     def sigtype_int(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def pubalg(self):
-        pass
+        raise NotImplementedError
 
     @pubalg.register(int)
     @pubalg.register(PubKeyAlgorithm)
     def pubalg_int(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def halg(self):
-        pass
+        raise NotImplementedError
 
     @halg.register(int)
     @halg.register(HashAlgorithm)
     def halg_int(self, val):
-        pass
+        raise NotImplementedError
 
     @property
     def signature(self):
-        return self._signature
+        raise NotImplementedError
 
     @signature.setter
     def signature(self, val):
-        self._signature = val
+        raise NotImplementedError
 
     @property
     def signer(self):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(Signature, self).__init__()
-        self._sigtype = None
-        self._pubalg = None
-        self._halg = None
-        self.subpackets = SubPackets()
-        self.hash2 = bytearray(2)
-        self.signature = None
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(Signature, self).__bytearray__()
-        _bytes += self.int_to_bytes(self.sigtype)
-        _bytes += self.int_to_bytes(self.pubalg)
-        _bytes += self.int_to_bytes(self.halg)
-        _bytes += self.subpackets.__bytearray__()
-        _bytes += self.hash2
-        _bytes += self.signature.__bytearray__()
-
-        return _bytes
+        raise NotImplementedError
 
     def canonical_bytes(self):
         '''Returns a bytearray that is the way the signature packet
@@ -348,42 +307,16 @@ class SignatureV4(Signature):
         of the Signature packet being hashed is not included in the hash, and
         the unhashed subpacket data length value is set to zero.
         '''
-        pass
+        raise NotImplementedError
 
     def __copy__(self):
-        spkt = SignatureV4()
-        spkt.header = copy.copy(self.header)
-        spkt._sigtype = self._sigtype
-        spkt._pubalg = self._pubalg
-        spkt._halg = self._halg
-
-        spkt.subpackets = copy.copy(self.subpackets)
-        spkt.hash2 = copy.copy(self.hash2)
-        spkt.signature = copy.copy(self.signature)
-
-        return spkt
+        raise NotImplementedError
 
     def update_hlen(self):
-        self.subpackets.update_hlen()
-        super(SignatureV4, self).update_hlen()
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(Signature, self).parse(packet)
-        self.sigtype = packet[0]
-        del packet[0]
-
-        self.pubalg = packet[0]
-        del packet[0]
-
-        self.halg = packet[0]
-        del packet[0]
-
-        self.subpackets.parse(packet)
-
-        self.hash2 = packet[:2]
-        del packet[:2]
-
-        self.signature.parse(packet)
+        raise NotImplementedError
 
 
 class SKESessionKey(VersionedPacket):
@@ -454,45 +387,27 @@ class SKESessionKeyV4(SKESessionKey):
 
     @property
     def symalg(self):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(SKESessionKeyV4, self).__init__()
-        self.s2k = String2Key()
-        self.ct = bytearray()
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(SKESessionKeyV4, self).__bytearray__()
-        _bytes += self.s2k.__bytearray__()[1:]
-        _bytes += self.ct
-        return _bytes
+        raise NotImplementedError
 
     def __copy__(self):
-        sk = self.__class__()
-        sk.header = copy.copy(self.header)
-        sk.s2k = copy.copy(self.s2k)
-        sk.ct = self.ct[:]
-
-        return sk
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(SKESessionKeyV4, self).parse(packet)
-        # prepend a valid usage identifier so this parses correctly
-        packet.insert(0, 255)
-        self.s2k.parse(packet, iv=False)
-
-        ctend = self.header.length - len(self.s2k)
-        self.ct = packet[:ctend]
-        del packet[:ctend]
+        raise NotImplementedError
 
     def decrypt_sk(self, passphrase):
         # derive the first session key from our passphrase
-        pass
+        raise NotImplementedError
 
     def encrypt_sk(self, passphrase, sk):
         # generate the salt and derive the key to encrypt sk with from it
-        pass
+        raise NotImplementedError
 
 
 class OnePassSignature(VersionedPacket):
@@ -541,78 +456,52 @@ class OnePassSignatureV3(OnePassSignature):
 
     @sdproperty
     def sigtype(self):
-        pass
+        raise NotImplementedError
 
     @sigtype.register(int)
     @sigtype.register(SignatureType)
     def sigtype_int(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def pubalg(self):
-        pass
+        raise NotImplementedError
 
     @pubalg.register(int)
     @pubalg.register(PubKeyAlgorithm)
     def pubalg_int(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def halg(self):
-        pass
+        raise NotImplementedError
 
     @halg.register(int)
     @halg.register(HashAlgorithm)
     def halg_int(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def signer(self):
-        pass
+        raise NotImplementedError
 
     @signer.register(str)
     @signer.register(str)
     def signer_str(self, val):
-        pass
+        raise NotImplementedError
 
     @signer.register(bytearray)
     def signer_bin(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(OnePassSignatureV3, self).__init__()
-        self._sigtype = None
-        self._halg = None
-        self._pubalg = None
-        self._signer = b'\x00' * 8
-        self.nested = False
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(OnePassSignatureV3, self).__bytearray__()
-        _bytes += bytearray([self.sigtype])
-        _bytes += bytearray([self.halg])
-        _bytes += bytearray([self.pubalg])
-        _bytes += binascii.unhexlify(self.signer.encode("latin-1"))
-        _bytes += bytearray([int(self.nested)])
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(OnePassSignatureV3, self).parse(packet)
-        self.sigtype = packet[0]
-        del packet[0]
-
-        self.halg = packet[0]
-        del packet[0]
-
-        self.pubalg = packet[0]
-        del packet[0]
-
-        self.signer = packet[:8]
-        del packet[:8]
-
-        self.nested = (packet[0] == 1)
-        del packet[0]
+        raise NotImplementedError
 
 
 class PrivKey(VersionedPacket, Primary, Private):
@@ -634,83 +523,58 @@ class PubKeyV4(PubKey):
 
     @sdproperty
     def created(self):
-        pass
+        raise NotImplementedError
 
     @created.register(datetime)
     def created_datetime(self, val):
-        pass
+        raise NotImplementedError
 
     @created.register(int)
     def created_int(self, val):
-        pass
+        raise NotImplementedError
 
     @created.register(bytes)
     @created.register(bytearray)
     def created_bin(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def pkalg(self):
-        pass
+        raise NotImplementedError
 
     @pkalg.register(int)
     @pkalg.register(PubKeyAlgorithm)
     def pkalg_int(self, val):
-        pass
+        raise NotImplementedError
 
         # km = _c.get(k, None)
         # self.keymaterial = km() if km is not None else km
 
     @property
     def public(self):
-        pass
+        raise NotImplementedError
 
     @property
     def fingerprint(self):
         # A V4 fingerprint is the 160-bit SHA-1 hash of the octet 0x99, followed by the two-octet packet length,
         # followed by the entire Public-Key packet starting with the version field.  The Key ID is the
         # low-order 64 bits of the fingerprint.
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(PubKeyV4, self).__init__()
-        self.created = datetime.now(timezone.utc)
-        self.pkalg = 0
-        self.keymaterial = None
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(PubKeyV4, self).__bytearray__()
-        _bytes += self.int_to_bytes(calendar.timegm(self.created.timetuple()), 4)
-        _bytes += self.int_to_bytes(self.pkalg)
-        _bytes += self.keymaterial.__bytearray__()
-        return _bytes
+        raise NotImplementedError
 
     def __copy__(self):
-        pk = self.__class__()
-        pk.header = copy.copy(self.header)
-        pk.created = self.created
-        pk.pkalg = self.pkalg
-        pk.keymaterial = copy.copy(self.keymaterial)
-
-        return pk
+        raise NotImplementedError
 
     def verify(self, subj, sigbytes, hash_alg):
-        pass
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(PubKeyV4, self).parse(packet)
-
-        self.created = packet[:4]
-        del packet[:4]
-
-        self.pkalg = packet[0]
-        del packet[0]
-
-        # bound keymaterial to the remaining length of the packet
-        pend = self.header.length - 6
-        self.keymaterial.parse(packet[:pend])
-        del packet[:pend]
+        raise NotImplementedError
 
 
 class PrivKeyV4(PrivKey, PubKeyV4):
@@ -719,36 +583,28 @@ class PrivKeyV4(PrivKey, PubKeyV4):
     @classmethod
     def new(cls, key_algorithm, key_size, created=None):
         # build a key packet
-        pk = PrivKeyV4()
-        pk.pkalg = key_algorithm
-        if pk.keymaterial is None:
-            raise NotImplementedError(key_algorithm)
-        pk.keymaterial._generate(key_size)
-        if created is not None:
-            pk.created = created
-        pk.update_hlen()
-        return pk
+        raise NotImplementedError
 
     def pubkey(self):
         # return a copy of ourselves, but just the public half
-        pass
+        raise NotImplementedError
 
     @property
     def protected(self):
-        pass
+        raise NotImplementedError
 
     @property
     def unlocked(self):
-        pass
+        raise NotImplementedError
 
     def protect(self, passphrase, enc_alg, hash_alg):
-        pass
+        raise NotImplementedError
 
     def unprotect(self, passphrase):
-        pass
+        raise NotImplementedError
 
     def sign(self, sigdata, hash_alg):
-        pass
+        raise NotImplementedError
 
 
 class PrivSubKey(VersionedPacket, Sub, Private):
@@ -794,40 +650,21 @@ class CompressedData(Packet):
 
     @sdproperty
     def calg(self):
-        pass
+        raise NotImplementedError
 
     @calg.register(int)
     @calg.register(CompressionAlgorithm)
     def calg_int(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(CompressedData, self).__init__()
-        self._calg = None
-        self.packets = []
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(CompressedData, self).__bytearray__()
-        _bytes += bytearray([self.calg])
-
-        _pb = bytearray()
-        for pkt in self.packets:
-            _pb += pkt.__bytearray__()
-        _bytes += self.calg.compress(bytes(_pb))
-
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(CompressedData, self).parse(packet)
-        self.calg = packet[0]
-        del packet[0]
-
-        cdata = bytearray(self.calg.decompress(packet[:self.header.length - 1]))
-        del packet[:self.header.length - 1]
-
-        while len(cdata) > 0:
-            self.packets.append(Packet(cdata))
+        raise NotImplementedError
 
 
 class SKEData(Packet):
@@ -877,46 +714,32 @@ class SKEData(Packet):
     __typeid__ = 0x09
 
     def __init__(self):
-        super(SKEData, self).__init__()
-        self.ct = bytearray()
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(SKEData, self).__bytearray__()
-        _bytes += self.ct
-        return _bytes
+        raise NotImplementedError
 
     def __copy__(self):
-        skd = self.__class__()
-        skd.ct = self.ct[:]
-        return skd
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(SKEData, self).parse(packet)
-        self.ct = packet[:self.header.length]
-        del packet[:self.header.length]
+        raise NotImplementedError
 
     def decrypt(self, key, alg):  # pragma: no cover
-        pass
+        raise NotImplementedError
 
 
 class Marker(Packet):
     __typeid__ = 0x0a
 
     def __init__(self):
-        super(Marker, self).__init__()
-        self.data = b'PGP'
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(Marker, self).__bytearray__()
-        _bytes += self.data
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(Marker, self).parse(packet)
-        self.data = packet[:self.header.length]
-        del packet[:self.header.length]
+        raise NotImplementedError
 
 
 class LiteralData(Packet):
@@ -969,68 +792,36 @@ class LiteralData(Packet):
 
     @sdproperty
     def mtime(self):
-        pass
+        raise NotImplementedError
 
     @mtime.register(datetime)
     def mtime_datetime(self, val):
-        pass
+        raise NotImplementedError
 
     @mtime.register(int)
     def mtime_int(self, val):
-        pass
+        raise NotImplementedError
 
     @mtime.register(bytes)
     @mtime.register(bytearray)
     def mtime_bin(self, val):
-        pass
+        raise NotImplementedError
 
     @property
     def contents(self):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(LiteralData, self).__init__()
-        self.format = 'b'
-        self.filename = ''
-        self.mtime = datetime.now(timezone.utc)
-        self._contents = bytearray()
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(LiteralData, self).__bytearray__()
-        _bytes += self.format.encode('latin-1')
-        _bytes += bytearray([len(self.filename)])
-        _bytes += self.filename.encode('latin-1')
-        _bytes += self.int_to_bytes(calendar.timegm(self.mtime.timetuple()), 4)
-        _bytes += self._contents
-        return _bytes
+        raise NotImplementedError
 
     def __copy__(self):
-        pkt = LiteralData()
-        pkt.header = copy.copy(self.header)
-        pkt.format = self.format
-        pkt.filename = self.filename
-        pkt.mtime = self.mtime
-        pkt._contents = self._contents[:]
-
-        return pkt
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(LiteralData, self).parse(packet)
-        self.format = chr(packet[0])
-        del packet[0]
-
-        fnl = packet[0]
-        del packet[0]
-
-        self.filename = packet[:fnl].decode()
-        del packet[:fnl]
-
-        self.mtime = packet[:4]
-        del packet[:4]
-
-        self._contents = packet[:self.header.length - (6 + fnl)]
-        del packet[:self.header.length - (6 + fnl)]
+        raise NotImplementedError
 
 
 class Trust(Packet):
@@ -1052,44 +843,33 @@ class Trust(Packet):
 
     @sdproperty
     def trustlevel(self):
-        pass
+        raise NotImplementedError
 
     @trustlevel.register(int)
     @trustlevel.register(TrustLevel)
     def trustlevel_int(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def trustflags(self):
-        pass
+        raise NotImplementedError
 
     @trustflags.register(list)
     def trustflags_list(self, val):
-        pass
+        raise NotImplementedError
 
     @trustflags.register(int)
     def trustflags_int(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(Trust, self).__init__()
-        self.trustlevel = TrustLevel.Unknown
-        self.trustflags = []
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(Trust, self).__bytearray__()
-        _bytes += self.int_to_bytes(self.trustlevel + sum(self.trustflags), 2)
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(Trust, self).parse(packet)
-        # self.trustlevel = packet[0] & 0x1f
-        t = self.bytes_to_int(packet[:2])
-        del packet[:2]
-
-        self.trustlevel = t
-        self.trustflags = t
+        raise NotImplementedError
 
 
 class UserID(Packet):
@@ -1105,35 +885,16 @@ class UserID(Packet):
     __typeid__ = 0x0D
 
     def __init__(self, uid=""):
-        super(UserID, self).__init__()
-        self.uid = uid
-        self._encoding_fallback = False
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(UserID, self).__bytearray__()
-        textenc = 'utf-8' if not self._encoding_fallback else 'charmap'
-        _bytes += self.uid.encode(textenc)
-
-        return _bytes
+        raise NotImplementedError
 
     def __copy__(self):
-        uid = UserID()
-        uid.header = copy.copy(self.header)
-        uid.uid = self.uid
-        return uid
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(UserID, self).parse(packet)
-
-        uid_bytes = packet[:self.header.length]
-        # uid_text = packet[:self.header.length].decode('utf-8')
-        del packet[:self.header.length]
-        try:
-            self.uid = uid_bytes.decode('utf-8')
-        except UnicodeDecodeError:
-            self.uid = uid_bytes.decode('charmap')
-            self._encoding_fallback = True
+        raise NotImplementedError
 
 
 class PubSubKey(VersionedPacket, Sub, Public):
@@ -1182,28 +943,19 @@ class UserAttribute(Packet):
 
     @property
     def image(self):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(UserAttribute, self).__init__()
-        self.subpackets = UserAttributeSubPackets()
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(UserAttribute, self).__bytearray__()
-        _bytes += self.subpackets.__bytearray__()
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(UserAttribute, self).parse(packet)
-
-        plen = len(packet)
-        while self.header.length > (plen - len(packet)):
-            self.subpackets.parse(packet)
+        raise NotImplementedError
 
     def update_hlen(self):
-        self.subpackets.update_hlen()
-        super(UserAttribute, self).update_hlen()
+        raise NotImplementedError
 
 
 class IntegrityProtectedSKEData(VersionedPacket):
@@ -1314,31 +1066,23 @@ class IntegrityProtectedSKEDataV1(IntegrityProtectedSKEData):
     __ver__ = 1
 
     def __init__(self):
-        super(IntegrityProtectedSKEDataV1, self).__init__()
-        self.ct = bytearray()
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray()
-        _bytes += super(IntegrityProtectedSKEDataV1, self).__bytearray__()
-        _bytes += self.ct
-        return _bytes
+        raise NotImplementedError
 
     def __copy__(self):
-        skd = self.__class__()
-        skd.ct = self.ct[:]
-        return skd
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(IntegrityProtectedSKEDataV1, self).parse(packet)
-        self.ct = packet[:self.header.length - 1]
-        del packet[:self.header.length - 1]
+        raise NotImplementedError
 
     def encrypt(self, key, alg, data):
-        pass
+        raise NotImplementedError
 
     def decrypt(self, key, alg):
         # iv, ivl2, pt = super(IntegrityProtectedSKEDataV1, self).decrypt(key, alg)
-        pass
+        raise NotImplementedError
 
 
 class MDC(Packet):
@@ -1371,13 +1115,10 @@ class MDC(Packet):
     __typeid__ = 0x13
 
     def __init__(self):
-        super(MDC, self).__init__()
-        self.mdc = ''
+        raise NotImplementedError
 
     def __bytearray__(self):
-        return super(MDC, self).__bytearray__() + binascii.unhexlify(self.mdc)
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(MDC, self).parse(packet)
-        self.mdc = binascii.hexlify(packet[:20])
-        del packet[:20]
+        raise NotImplementedError

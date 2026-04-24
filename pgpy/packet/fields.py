@@ -280,7 +280,7 @@ class OpaqueSignature(Signature):
         self.data = packet
 
     def from_signer(self, sig):
-        pass
+        self.data = bytearray(sig)
 
 
 class RSASignature(Signature):
@@ -293,7 +293,7 @@ class RSASignature(Signature):
         self.md_mod_n = MPI(packet)
 
     def from_signer(self, sig):
-        pass
+        self.md_mod_n = MPI(self.bytes_to_int(sig))
 
 
 class DSASignature(Signature):
@@ -309,7 +309,44 @@ class DSASignature(Signature):
 
     def from_signer(self, sig):
         ##TODO: just use pyasn1 for this
-        pass
+        def _der_intf(_asn):
+            if _asn[0] != 0x02:  # pragma: no cover
+                raise ValueError("Expected: Integer (0x02). Got: 0x{:02X}".format(_asn[0]))
+            del _asn[0]
+
+            if _asn[0] & 0x80:  # pragma: no cover
+                llen = _asn[0] & 0x7F
+                del _asn[0]
+
+                flen = self.bytes_to_int(_asn[:llen])
+                del _asn[:llen]
+
+            else:
+                flen = _asn[0] & 0x7F
+                del _asn[0]
+
+            i = self.bytes_to_int(_asn[:flen])
+            del _asn[:flen]
+            return i
+
+        if isinstance(sig, bytes):
+            sig = bytearray(sig)
+
+        # this is a very limited asn1 decoder - it is only intended to decode a DER encoded sequence of integers
+        if not sig[0] == 0x30:
+            raise NotImplementedError("Expected: Sequence (0x30). Got: 0x{:02X}".format(sig[0]))
+        del sig[0]
+
+        # skip the sequence length field
+        if sig[0] & 0x80:  # pragma: no cover
+            llen = sig[0] & 0x7F
+            del sig[:llen + 1]
+
+        else:
+            del sig[0]
+
+        self.r = MPI(_der_intf(sig))
+        self.s = MPI(_der_intf(sig))
 
     def parse(self, packet):
         self.r = MPI(packet)
@@ -318,12 +355,19 @@ class DSASignature(Signature):
 
 class ECDSASignature(DSASignature):
     def from_signer(self, sig):
-        pass
+        seq, _ = decoder.decode(sig)
+        self.r = MPI(seq[0])
+        self.s = MPI(seq[1])
 
 
 class EdDSASignature(DSASignature):
     def from_signer(self, sig):
-        pass
+        lsig = len(sig)
+        if lsig % 2 != 0:
+            raise PGPError("malformed EdDSA signature")
+        split = lsig // 2
+        self.r = MPI(self.bytes_to_int(sig[:split]))
+        self.s = MPI(self.bytes_to_int(sig[split:]))
 
     def __sig__(self):
         # TODO: change this length when EdDSA can be used with another curve (Ed448)
@@ -363,10 +407,10 @@ class PubKey(MPIs):
         return _bytes
 
     def publen(self):
-        pass
+        return len(self)
 
     def verify(self, subj, sigbytes, hash_alg):
-        pass
+        return NotImplemented  # pragma: no cover
 
 
 class OpaquePubKey(PubKey):  # pragma: no cover
@@ -396,7 +440,12 @@ class RSAPub(PubKey):
 
     def verify(self, subj, sigbytes, hash_alg):
         # zero-pad sigbytes if necessary
-        pass
+        sigbytes = (b'\x00' * (self.n.byte_length() - len(sigbytes))) + sigbytes
+        try:
+            self.__pubkey__().verify(sigbytes, subj, padding.PKCS1v15(), hash_alg)
+        except InvalidSignature:
+            return False
+        return True
 
     def parse(self, packet):
         self.n = MPI(packet)
@@ -411,7 +460,11 @@ class DSAPub(PubKey):
         return dsa.DSAPublicNumbers(self.y, params).public_key(default_backend())
 
     def verify(self, subj, sigbytes, hash_alg):
-        pass
+        try:
+            self.__pubkey__().verify(sigbytes, subj, hash_alg)
+        except InvalidSignature:
+            return False
+        return True
 
     def parse(self, packet):
         self.p = MPI(packet)
@@ -521,7 +574,11 @@ class ECDSAPub(PubKey):
         return pkt
 
     def verify(self, subj, sigbytes, hash_alg):
-        pass
+        try:
+            self.__pubkey__().verify(sigbytes, subj, ec.ECDSA(hash_alg))
+        except InvalidSignature:
+            return False
+        return True
 
     def parse(self, packet):
         oidlen = packet[0]
@@ -565,7 +622,14 @@ class EdDSAPub(PubKey):
     def verify(self, subj, sigbytes, hash_alg):
         # GnuPG requires a pre-hashing with EdDSA
         # https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-06#section-14.8
-        pass
+        digest = hashes.Hash(hash_alg, backend=default_backend())
+        digest.update(subj)
+        subj = digest.finalize()
+        try:
+            self.__pubkey__().verify(sigbytes, subj)
+        except InvalidSignature:
+            return False
+        return True
 
     def parse(self, packet):
         oidlen = packet[0]
@@ -767,47 +831,49 @@ class String2Key(Field):
     """
     @sdproperty
     def encalg(self):
-        pass
+        return self._encalg
 
     @encalg.register(int)
     @encalg.register(SymmetricKeyAlgorithm)
     def encalg_int(self, val):
-        pass
+        self._encalg = SymmetricKeyAlgorithm(val)
 
     @sdproperty
     def specifier(self):
-        pass
+        return self._specifier
 
     @specifier.register(int)
     @specifier.register(String2KeyType)
     def specifier_int(self, val):
-        pass
+        self._specifier = String2KeyType(val)
 
     @sdproperty
     def gnuext(self):
-        pass
+        return self._gnuext
 
     @gnuext.register(int)
     @gnuext.register(S2KGNUExtension)
     def gnuext_int(self, val):
-        pass
+        self._gnuext = S2KGNUExtension(val)
 
     @sdproperty
     def halg(self):
-        pass
+        return self._halg
 
     @halg.register(int)
     @halg.register(HashAlgorithm)
     def halg_int(self, val):
-        pass
+        self._halg = HashAlgorithm(val)
 
     @sdproperty
     def count(self):
-        pass
+        return (16 + (self._count & 15)) << ((self._count >> 4) + 6)
 
     @count.register(int)
     def count_int(self, val):
-        pass
+        if val < 0 or val > 255:  # pragma: no cover
+            raise ValueError("count must be between 0 and 256")
+        self._count = val
 
     def __init__(self):
         super(String2Key, self).__init__()
@@ -950,7 +1016,45 @@ class String2Key(Field):
 
     def derive_key(self, passphrase):
         ##TODO: raise an exception if self.usage is not 254 or 255
-        pass
+        keylen = self.encalg.key_size
+        hashlen = self.halg.digest_size * 8
+
+        ctx = int(math.ceil((keylen / hashlen)))
+
+        # Simple S2K - always done
+        hsalt = b''
+        if isinstance(passphrase, bytes):
+            hpass = passphrase
+        else:
+            hpass = passphrase.encode('utf-8')
+
+        # salted, iterated S2K
+        if self.specifier >= String2KeyType.Salted:
+            hsalt = bytes(self.salt)
+
+        count = len(hsalt + hpass)
+        if self.specifier == String2KeyType.Iterated and self.count > len(hsalt + hpass):
+            count = self.count
+
+        hcount = (count // len(hsalt + hpass))
+        hleft = count - (hcount * len(hsalt + hpass))
+
+        hashdata = ((hsalt + hpass) * hcount) + (hsalt + hpass)[:hleft]
+
+        h = []
+        for i in range(0, ctx):
+            _h = self.halg.hasher
+            _h.update(b'\x00' * i)
+            _h.update(hashdata)
+            h.append(_h)
+
+        # GC some stuff
+        del hsalt
+        del hpass
+        del hashdata
+
+        # and return the key!
+        return b''.join(hc.digest() for hc in h)[:(keylen // 8)]
 
 
 class ECKDF(Field):
@@ -971,21 +1075,21 @@ class ECKDF(Field):
     """
     @sdproperty
     def halg(self):
-        pass
+        return self._halg
 
     @halg.register(int)
     @halg.register(HashAlgorithm)
     def halg_int(self, val):
-        pass
+        self._halg = HashAlgorithm(val)
 
     @sdproperty
     def encalg(self):
-        pass
+        return self._encalg
 
     @encalg.register(int)
     @encalg.register(SymmetricKeyAlgorithm)
     def encalg_int(self, val):
-        pass
+        self._encalg = SymmetricKeyAlgorithm(val)
 
     def __init__(self):
         super(ECKDF, self).__init__()
@@ -1021,7 +1125,17 @@ class ECKDF(Field):
         # wrapper around the Concatenation KDF method provided by cryptography
         # assemble the additional data as defined in RFC 6637:
         #  Param = curve_OID_len || curve_OID || public_key_alg_ID || 03 || 01 || KDF_hash_ID || KEK_alg_ID for AESKeyWrap || "Anonymous
-        pass
+        data = bytearray()
+        data += encoder.encode(curve.value)[1:]
+        data.append(pkalg)
+        data += b'\x03\x01'
+        data.append(self.halg)
+        data.append(self.encalg)
+        data += b'Anonymous Sender    '
+        data += binascii.unhexlify(fingerprint.replace(' ', ''))
+
+        ckdf = ConcatKDFHash(algorithm=getattr(hashes, self.halg.name)(), length=self.encalg.key_size // 8, otherinfo=bytes(data), backend=default_backend())
+        return ckdf.derive(s)
 
 
 class PrivKey(PubKey):
@@ -1091,11 +1205,36 @@ class PrivKey(PubKey):
         "Calculate the key checksum"
 
     def publen(self):
-        pass
+        return super(PrivKey, self).__len__()
 
     def encrypt_keyblob(self, passphrase, enc_alg, hash_alg):
         # PGPy will only ever use iterated and salted S2k mode
-        pass
+        self.s2k.usage = 254
+        self.s2k.encalg = enc_alg
+        self.s2k.specifier = String2KeyType.Iterated
+        self.s2k.iv = enc_alg.gen_iv()
+        self.s2k.halg = hash_alg
+        self.s2k.salt = bytearray(os.urandom(8))
+        self.s2k.count = hash_alg.tuned_count
+
+        # now that String-to-Key is ready to go, derive sessionkey from passphrase
+        # and then unreference passphrase
+        sessionkey = self.s2k.derive_key(passphrase)
+        del passphrase
+
+        pt = bytearray()
+        for pf in self.__privfields__:
+            pt += getattr(self, pf).to_mpibytes()
+
+        # append a SHA-1 hash of the plaintext so far to the plaintext
+        pt += hashlib.new('sha1', pt).digest()
+
+        # encrypt
+        self.encbytes = bytearray(_encrypt(bytes(pt), bytes(sessionkey), enc_alg, bytes(self.s2k.iv)))
+
+        # delete pt and clear self
+        del pt
+        self.clear()
 
     @abc.abstractmethod
     def decrypt_keyblob(self, passphrase):
@@ -1132,11 +1271,13 @@ class PrivKey(PubKey):
         return bytearray(pt)
 
     def sign(self, sigdata, hash_alg):
-        pass
+        return NotImplemented  # pragma: no cover
 
     def clear(self):
         """delete and re-initialize all private components to zero"""
-        pass
+        for field in self.__privfields__:
+            delattr(self, field)
+            setattr(self, field, MPI(0))
 
 
 class OpaquePrivKey(PrivKey, OpaquePubKey):  # pragma: no cover
@@ -1148,7 +1289,7 @@ class OpaquePrivKey(PrivKey, OpaquePubKey):  # pragma: no cover
         raise NotImplementedError()
 
     def decrypt_keyblob(self, passphrase):
-        pass
+        return NotImplemented
 
 
 class RSAPriv(PrivKey, RSAPub):
@@ -1209,10 +1350,20 @@ class RSAPriv(PrivKey, RSAPub):
             self.encbytes = packet
 
     def decrypt_keyblob(self, passphrase):
-        pass
+        kb = super(RSAPriv, self).decrypt_keyblob(passphrase)
+        del passphrase
+
+        self.d = MPI(kb)
+        self.p = MPI(kb)
+        self.q = MPI(kb)
+        self.u = MPI(kb)
+
+        if self.s2k.usage in [254, 255]:
+            self.chksum = kb
+            del kb
 
     def sign(self, sigdata, hash_alg):
-        pass
+        return self.__privkey__().sign(sigdata, padding.PKCS1v15(), hash_alg)
 
 
 class DSAPriv(PrivKey, DSAPub):
@@ -1261,10 +1412,17 @@ class DSAPriv(PrivKey, DSAPub):
             del packet[:2]
 
     def decrypt_keyblob(self, passphrase):
-        pass
+        kb = super(DSAPriv, self).decrypt_keyblob(passphrase)
+        del passphrase
+
+        self.x = MPI(kb)
+
+        if self.s2k.usage in [254, 255]:
+            self.chksum = kb
+            del kb
 
     def sign(self, sigdata, hash_alg):
-        pass
+        return self.__privkey__().sign(sigdata, hash_alg)
 
 
 class ElGPriv(PrivKey, ElGPub):
@@ -1295,7 +1453,14 @@ class ElGPriv(PrivKey, ElGPub):
             del packet[:2]
 
     def decrypt_keyblob(self, passphrase):
-        pass
+        kb = super(ElGPriv, self).decrypt_keyblob(passphrase)
+        del passphrase
+
+        self.x = MPI(kb)
+
+        if self.s2k.usage in [254, 255]:
+            self.chksum = kb
+            del kb
 
 
 class ECDSAPriv(PrivKey, ECDSAPub):
@@ -1339,10 +1504,12 @@ class ECDSAPriv(PrivKey, ECDSAPub):
             self.encbytes = packet
 
     def decrypt_keyblob(self, passphrase):
-        pass
+        kb = super(ECDSAPriv, self).decrypt_keyblob(passphrase)
+        del passphrase
+        self.s = MPI(kb)
 
     def sign(self, sigdata, hash_alg):
-        pass
+        return self.__privkey__().sign(sigdata, ec.ECDSA(hash_alg))
 
 
 class EdDSAPriv(PrivKey, EdDSAPub):
@@ -1389,12 +1556,17 @@ class EdDSAPriv(PrivKey, EdDSAPub):
             self.encbytes = packet
 
     def decrypt_keyblob(self, passphrase):
-        pass
+        kb = super(EdDSAPriv, self).decrypt_keyblob(passphrase)
+        del passphrase
+        self.s = MPI(kb)
 
     def sign(self, sigdata, hash_alg):
         # GnuPG requires a pre-hashing with EdDSA
         # https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-06#section-14.8
-        pass
+        digest = hashes.Hash(hash_alg, backend=default_backend())
+        digest.update(sigdata)
+        sigdata = digest.finalize()
+        return self.__privkey__().sign(sigdata)
 
 
 class ECDHPriv(ECDSAPriv, ECDHPub):
@@ -1447,7 +1619,7 @@ class ECDHPriv(ECDSAPriv, ECDHPub):
         self.kdf.encalg = self.oid.kek_alg
 
     def publen(self):
-        pass
+        return ECDHPub.__len__(self)
 
     def parse(self, packet):
         ECDHPub.parse(self, packet)
@@ -1493,10 +1665,12 @@ class RSACipherText(CipherText):
 
     @classmethod
     def encrypt(cls, encfn, *args):
-        pass
+        ct = cls()
+        ct.me_mod_n = MPI(cls.bytes_to_int(encfn(*args)))
+        return ct
 
     def decrypt(self, decfn, *args):
-        pass
+        return decfn(*args)
 
     def parse(self, packet):
         self.me_mod_n = MPI(packet)
@@ -1544,10 +1718,59 @@ class ECDHCipherText(CipherText):
         The decryption is the inverse of the method given.  Note that the
         recipient obtains the shared secret by calculating
         """
-        pass
+        # *args should be:
+        # - m
+        #
+        _m, = args
+
+        # m may need to be PKCS5-padded
+        padder = PKCS7(64).padder()
+        m = padder.update(_m) + padder.finalize()
+
+        km = pk.keymaterial
+        ct = cls()
+
+        # generate ephemeral key pair and keep public key in ct
+        # use private key to compute the shared point "s"
+        if km.oid == EllipticCurveOID.Curve25519:
+            v = x25519.X25519PrivateKey.generate()
+            x = v.public_key().public_bytes(encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw)
+            ct.p = ECPoint.from_values(km.oid.key_size, ECPointFormat.Native, x)
+            s = v.exchange(km.__pubkey__())
+        else:
+            v = ec.generate_private_key(km.oid.curve(), default_backend())
+            x = MPI(v.public_key().public_numbers().x)
+            y = MPI(v.public_key().public_numbers().y)
+            ct.p = ECPoint.from_values(km.oid.key_size, ECPointFormat.Standard, x, y)
+            s = v.exchange(ec.ECDH(), km.__pubkey__())
+
+        # derive the wrapping key
+        z = km.kdf.derive_key(s, km.oid, PubKeyAlgorithm.ECDH, pk.fingerprint)
+
+        # compute C
+        ct.c = aes_key_wrap(z, m, default_backend())
+
+        return ct
 
     def decrypt(self, pk, *args):
-        pass
+        km = pk.keymaterial
+        if km.oid == EllipticCurveOID.Curve25519:
+            v = x25519.X25519PublicKey.from_public_bytes(self.p.x)
+            s = km.__privkey__().exchange(v)
+        else:
+            # assemble the public component of ephemeral key v
+            v = ec.EllipticCurvePublicNumbers(self.p.x, self.p.y, km.oid.curve()).public_key(default_backend())
+            # compute s using the inverse of how it was derived during encryption
+            s = km.__privkey__().exchange(ec.ECDH(), v)
+
+        # derive the wrapping key
+        z = km.kdf.derive_key(s, km.oid, PubKeyAlgorithm.ECDH, pk.fingerprint)
+
+        # unwrap and unpad m
+        _m = aes_key_unwrap(z, self.c, default_backend())
+
+        padder = PKCS7(64).unpadder()
+        return padder.update(_m) + padder.finalize()
 
     def __init__(self):
         super(ECDHCipherText, self).__init__()

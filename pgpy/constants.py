@@ -104,21 +104,21 @@ class EllipticCurveOID(Enum):
 
     @property
     def can_gen(self):
-        pass
+        raise NotImplementedError
 
     @property
     def key_size(self):
-        pass
+        raise NotImplementedError
 
     @property
     def kdf_halg(self):
         # return the hash algorithm to specify in the KDF fields when generating a key
-        pass
+        raise NotImplementedError
 
     @property
     def kek_alg(self):
         # return the AES algorithm to specify in the KDF fields when generating a key
-        pass
+        raise NotImplementedError
 
 
 class ECPointFormat(IntEnum):
@@ -178,44 +178,29 @@ class SymmetricKeyAlgorithm(IntEnum):
 
     @property
     def cipher(self):
-        bs = {SymmetricKeyAlgorithm.IDEA: algorithms.IDEA,
-              SymmetricKeyAlgorithm.TripleDES: algorithms.TripleDES,
-              SymmetricKeyAlgorithm.CAST5: algorithms.CAST5,
-              SymmetricKeyAlgorithm.Blowfish: algorithms.Blowfish,
-              SymmetricKeyAlgorithm.AES128: algorithms.AES,
-              SymmetricKeyAlgorithm.AES192: algorithms.AES,
-              SymmetricKeyAlgorithm.AES256: algorithms.AES,
-              SymmetricKeyAlgorithm.Twofish256: namedtuple('Twofish256', ['block_size'])(block_size=128),
-              SymmetricKeyAlgorithm.Camellia128: algorithms.Camellia,
-              SymmetricKeyAlgorithm.Camellia192: algorithms.Camellia,
-              SymmetricKeyAlgorithm.Camellia256: algorithms.Camellia}
-
-        if self in bs:
-            return bs[self]
-
-        raise NotImplementedError(repr(self))
+        raise NotImplementedError
 
     @property
     def is_supported(self):
-        pass
+        raise NotImplementedError
 
     @property
     def is_insecure(self):
-        pass
+        raise NotImplementedError
 
     @property
     def block_size(self):
-        pass
+        raise NotImplementedError
 
     @property
     def key_size(self):
-        pass
+        raise NotImplementedError
 
     def gen_iv(self):
-        pass
+        raise NotImplementedError
 
     def gen_key(self):
-        pass
+        raise NotImplementedError
 
 
 class PubKeyAlgorithm(IntEnum):
@@ -239,22 +224,22 @@ class PubKeyAlgorithm(IntEnum):
 
     @property
     def can_gen(self):
-        pass
+        raise NotImplementedError
 
     @property
     def can_encrypt(self):  # pragma: no cover
-        pass
+        raise NotImplementedError
 
     @property
     def can_sign(self):
-        pass
+        raise NotImplementedError
 
     @property
     def deprecated(self):
-        pass
+        raise NotImplementedError
 
     def validate_params(self, size):
-        pass
+        raise NotImplementedError
 
 
 class CompressionAlgorithm(IntEnum):
@@ -269,34 +254,10 @@ class CompressionAlgorithm(IntEnum):
     BZ2 = 0x03
 
     def compress(self, data):
-        if self is CompressionAlgorithm.Uncompressed:
-            return data
-
-        if self is CompressionAlgorithm.ZIP:
-            return zlib.compress(data)[2:-4]
-
-        if self is CompressionAlgorithm.ZLIB:
-            return zlib.compress(data)
-
-        if self is CompressionAlgorithm.BZ2:
-            return bz2.compress(data)
-
-        raise NotImplementedError(self)
+        raise NotImplementedError
 
     def decompress(self, data):
-        if self is CompressionAlgorithm.Uncompressed:
-            return data
-
-        if self is CompressionAlgorithm.ZIP:
-            return zlib.decompress(data, -15)
-
-        if self is CompressionAlgorithm.ZLIB:
-            return zlib.decompress(data)
-
-        if self is CompressionAlgorithm.BZ2:
-            return bz2.decompress(data)
-
-        raise NotImplementedError(self)
+        raise NotImplementedError
 
 
 class HashAlgorithm(IntEnum):
@@ -323,31 +284,31 @@ class HashAlgorithm(IntEnum):
 
     @property
     def hasher(self):
-        pass
+        raise NotImplementedError
 
     @property
     def digest_size(self):
-        pass
+        raise NotImplementedError
 
     @property
     def tuned_count(self):
-        pass
+        raise NotImplementedError
 
     @property
     def is_supported(self):
-        pass
+        return True
 
     @property
     def is_second_preimage_resistant(self):
-        pass
+        raise NotImplementedError
 
     @property
     def is_collision_resistant(self):
-        pass
+        raise NotImplementedError
 
     @property
     def is_considered_secure(self):
-        pass
+        raise NotImplementedError
 
 
 class RevocationReason(IntEnum):
@@ -370,10 +331,7 @@ class ImageEncoding(IntEnum):
 
     @classmethod
     def encodingof(cls, imagebytes):
-        type = imghdr.what(None, h=imagebytes)
-        if type == 'jpeg':
-            return ImageEncoding.JPEG
-        return ImageEncoding.Unknown  # pragma: no cover
+        raise NotImplementedError
 
 
 class SignatureType(IntEnum):
@@ -508,7 +466,7 @@ class Features(FlagEnum):
 
     @classproperty
     def pgpy_features(cls):
-        pass
+        raise NotImplementedError
 
 
 class RevocationKeyClass(FlagEnum):
@@ -543,7 +501,7 @@ class SecurityIssues(IntFlag):
 
     @property
     def causes_signature_verify_to_fail(self):
-        pass
+        raise NotImplementedError
 
 
 # https://safecurves.cr.yp.to/

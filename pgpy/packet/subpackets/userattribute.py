@@ -50,53 +50,35 @@ class Image(UserAttribute):
 
     @sdproperty
     def version(self):
-        pass
+        raise NotImplementedError
 
     @version.register(int)
     def version_int(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def iencoding(self):
-        pass
+        raise NotImplementedError
 
     @iencoding.register(int)
     @iencoding.register(ImageEncoding)
     def iencoding_int(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def image(self):
-        pass
+        raise NotImplementedError
 
     @image.register(bytes)
     @image.register(bytearray)
     def image_bin(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(Image, self).__init__()
-        self.version = 1
-        self.iencoding = 1
-        self.image = bytearray()
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(Image, self).__bytearray__()
-
-        if self.version == 1:
-            # v1 image header length is always 16 bytes
-            # and stored little-endian due to an 'historical accident'
-            _bytes += struct.pack('<hbbiii', 16, self.version, self.iencoding, 0, 0, 0)
-
-        _bytes += self.image
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(Image, self).parse(packet)
-
-        with memoryview(packet) as _head:
-            _, self.version, self.iencoding, _, _, _ = struct.unpack_from('<hbbiii', _head[:16].tobytes())
-        del packet[:16]
-
-        self.image = packet[:(self.header.length - 17)]
-        del packet[:(self.header.length - 17)]
+        raise NotImplementedError

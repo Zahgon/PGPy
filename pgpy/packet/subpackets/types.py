@@ -20,84 +20,67 @@ __all__ = ['Header',
 class Header(_Header):
     @sdproperty
     def critical(self):
-        pass
+        raise NotImplementedError
 
     @critical.register(bool)
     def critical_bool(self, val):
-        pass
+        raise NotImplementedError
 
     @sdproperty
     def typeid(self):
-        pass
+        raise NotImplementedError
 
     @typeid.register(int)
     def typeid_int(self, val):
-        pass
+        raise NotImplementedError
 
     @typeid.register(bytes)
     @typeid.register(bytearray)
     def typeid_bin(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(Header, self).__init__()
-        self._typeid = -1
-        self.critical = False
+        raise NotImplementedError
 
     def parse(self, packet):
-        self.length = packet
-
-        self.typeid = packet[:1]
-        del packet[:1]
+        raise NotImplementedError
 
     def __len__(self):
-        return self.llen + 1
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = bytearray(self.encode_length(self.length))
-        _bytes += self.int_to_bytes((int(self.critical) << 7) + self.typeid)
-        return _bytes
+        raise NotImplementedError
 
 
 class EmbeddedSignatureHeader(VersionedHeader):
     def __bytearray__(self):
-        return bytearray([self.version])
+        raise NotImplementedError
 
     def parse(self, packet):
-        self.tag = 2
-        super(EmbeddedSignatureHeader, self).parse(packet)
+        raise NotImplementedError
 
 
 class SubPacket(Dispatchable):
     __headercls__ = Header
 
     def __init__(self):
-        super(SubPacket, self).__init__()
-        self.header = Header()
-
-        if (
-            self.header.typeid == -1
-            and (not hasattr(self.__typeid__, '__abstractmethod__'))
-            and (self.__typeid__ not in {-1, None})
-        ):
-            self.header.typeid = self.__typeid__
+        raise NotImplementedError
 
     def __bytearray__(self):
-        return self.header.__bytearray__()
+        raise NotImplementedError
 
     def __len__(self):
-        return (self.header.llen + self.header.length)
+        raise NotImplementedError
 
     def __repr__(self):
-        return "<{} [0x{:02x}] at 0x{:x}>".format(self.__class__.__name__, self.header.typeid, id(self))
+        raise NotImplementedError
 
     def update_hlen(self):
-        self.header.length = (len(self.__bytearray__()) - len(self.header)) + 1
+        raise NotImplementedError
 
     @abc.abstractmethod
     def parse(self, packet):  # pragma: no cover
-        if self.header._typeid == -1:
-            self.header.parse(packet)
+        raise NotImplementedError
 
 
 class Signature(SubPacket):
@@ -113,23 +96,18 @@ class Opaque(Signature, UserAttribute):
 
     @sdproperty
     def payload(self):
-        pass
+        raise NotImplementedError
 
     @payload.register(bytes)
     @payload.register(bytearray)
     def payload_bin(self, val):
-        pass
+        raise NotImplementedError
 
     def __init__(self):
-        super(Opaque, self).__init__()
-        self.payload = b''
+        raise NotImplementedError
 
     def __bytearray__(self):
-        _bytes = super(Opaque, self).__bytearray__()
-        _bytes += self.payload
-        return _bytes
+        raise NotImplementedError
 
     def parse(self, packet):
-        super(Opaque, self).parse(packet)
-        self.payload = packet[:(self.header.length - 1)]
-        del packet[:(self.header.length - 1)]
+        raise NotImplementedError
