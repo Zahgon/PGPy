@@ -104,32 +104,21 @@ class EllipticCurveOID(Enum):
 
     @property
     def can_gen(self):
-        return self.curve is not None
+        pass
 
     @property
     def key_size(self):
-        if self.curve is not None:
-            return self.curve.key_size
+        pass
 
     @property
     def kdf_halg(self):
         # return the hash algorithm to specify in the KDF fields when generating a key
-        algs = {256: HashAlgorithm.SHA256,
-                384: HashAlgorithm.SHA384,
-                512: HashAlgorithm.SHA512,
-                521: HashAlgorithm.SHA512}
-
-        return algs.get(self.key_size, None)
+        pass
 
     @property
     def kek_alg(self):
         # return the AES algorithm to specify in the KDF fields when generating a key
-        algs = {256: SymmetricKeyAlgorithm.AES128,
-                384: SymmetricKeyAlgorithm.AES192,
-                512: SymmetricKeyAlgorithm.AES256,
-                521: SymmetricKeyAlgorithm.AES256}
-
-        return algs.get(self.key_size, None)
+        pass
 
 
 class ECPointFormat(IntEnum):
@@ -208,41 +197,25 @@ class SymmetricKeyAlgorithm(IntEnum):
 
     @property
     def is_supported(self):
-        return callable(self.cipher)
+        pass
 
     @property
     def is_insecure(self):
-        insecure_ciphers = {SymmetricKeyAlgorithm.IDEA}
-        return self in insecure_ciphers
+        pass
 
     @property
     def block_size(self):
-        return self.cipher.block_size
+        pass
 
     @property
     def key_size(self):
-        ks = {SymmetricKeyAlgorithm.IDEA: 128,
-              SymmetricKeyAlgorithm.TripleDES: 192,
-              SymmetricKeyAlgorithm.CAST5: 128,
-              SymmetricKeyAlgorithm.Blowfish: 128,
-              SymmetricKeyAlgorithm.AES128: 128,
-              SymmetricKeyAlgorithm.AES192: 192,
-              SymmetricKeyAlgorithm.AES256: 256,
-              SymmetricKeyAlgorithm.Twofish256: 256,
-              SymmetricKeyAlgorithm.Camellia128: 128,
-              SymmetricKeyAlgorithm.Camellia192: 192,
-              SymmetricKeyAlgorithm.Camellia256: 256}
-
-        if self in ks:
-            return ks[self]
-
-        raise NotImplementedError(repr(self))
+        pass
 
     def gen_iv(self):
-        return os.urandom(self.block_size // 8)
+        pass
 
     def gen_key(self):
-        return os.urandom(self.key_size // 8)
+        pass
 
 
 class PubKeyAlgorithm(IntEnum):
@@ -266,45 +239,22 @@ class PubKeyAlgorithm(IntEnum):
 
     @property
     def can_gen(self):
-        return self in {PubKeyAlgorithm.RSAEncryptOrSign,
-                        PubKeyAlgorithm.DSA,
-                        PubKeyAlgorithm.ECDSA,
-                        PubKeyAlgorithm.ECDH,
-                        PubKeyAlgorithm.EdDSA}
+        pass
 
     @property
     def can_encrypt(self):  # pragma: no cover
-        return self in {PubKeyAlgorithm.RSAEncryptOrSign, PubKeyAlgorithm.ElGamal, PubKeyAlgorithm.ECDH}
+        pass
 
     @property
     def can_sign(self):
-        return self in {PubKeyAlgorithm.RSAEncryptOrSign, PubKeyAlgorithm.DSA, PubKeyAlgorithm.ECDSA, PubKeyAlgorithm.EdDSA}
+        pass
 
     @property
     def deprecated(self):
-        return self in {PubKeyAlgorithm.RSAEncrypt,
-                        PubKeyAlgorithm.RSASign,
-                        PubKeyAlgorithm.FormerlyElGamalEncryptOrSign}
+        pass
 
     def validate_params(self, size):
-        min_size = MINIMUM_ASYMMETRIC_KEY_LENGTHS.get(self)
-        if min_size is not None:
-            if isinstance(min_size, set):
-                # ECC
-                curve = size
-                safe_curves = min_size
-                if curve in safe_curves:
-                    return SecurityIssues.OK
-                else:
-                    return SecurityIssues.InsecureCurve
-            else:
-                # not ECC
-                if size >= min_size:
-                    return SecurityIssues.OK
-                else:
-                    return SecurityIssues.AsymmetricKeyLengthIsTooShort
-        # min_size is None
-        return SecurityIssues.BrokenAsymmetricFunc
+        pass
 
 
 class CompressionAlgorithm(IntEnum):
@@ -373,40 +323,31 @@ class HashAlgorithm(IntEnum):
 
     @property
     def hasher(self):
-        return hashlib.new(self.name)
+        pass
 
     @property
     def digest_size(self):
-        return self.hasher.digest_size
+        pass
 
     @property
     def tuned_count(self):
-        return self._tuned_count
+        pass
 
     @property
     def is_supported(self):
-        return True
+        pass
 
     @property
     def is_second_preimage_resistant(self):
-        return self in {HashAlgorithm.SHA1}
+        pass
 
     @property
     def is_collision_resistant(self):
-        return self in {HashAlgorithm.SHA256, HashAlgorithm.SHA384, HashAlgorithm.SHA512}
+        pass
 
     @property
     def is_considered_secure(self):
-        if self.is_collision_resistant:
-            return SecurityIssues.OK
-
-        warnings.warn('Hash function {hash} is not considered collision resistant'.format(hash=repr(self)))
-        issues = SecurityIssues.HashFunctionNotCollisionResistant
-
-        if not self.is_second_preimage_resistant:
-            issues |= SecurityIssues.HashFunctionNotSecondPreimageResistant
-
-        return issues
+        pass
 
 
 class RevocationReason(IntEnum):
@@ -567,7 +508,7 @@ class Features(FlagEnum):
 
     @classproperty
     def pgpy_features(cls):
-        return Features.ModificationDetection
+        pass
 
 
 class RevocationKeyClass(FlagEnum):
@@ -602,13 +543,7 @@ class SecurityIssues(IntFlag):
 
     @property
     def causes_signature_verify_to_fail(self):
-        return self in {
-            SecurityIssues.WrongSig,
-            SecurityIssues.Expired,
-            SecurityIssues.Disabled,
-            SecurityIssues.Invalid,
-            SecurityIssues.NoSelfSignature,
-        }
+        pass
 
 
 # https://safecurves.cr.yp.to/

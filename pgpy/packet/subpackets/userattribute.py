@@ -50,33 +50,29 @@ class Image(UserAttribute):
 
     @sdproperty
     def version(self):
-        return self._version
+        pass
 
     @version.register(int)
     def version_int(self, val):
-        self._version = val
+        pass
 
     @sdproperty
     def iencoding(self):
-        return self._iencoding
+        pass
 
     @iencoding.register(int)
     @iencoding.register(ImageEncoding)
     def iencoding_int(self, val):
-        try:
-            self._iencoding = ImageEncoding(val)
-
-        except ValueError:  # pragma: no cover
-            self._iencoding = val
+        pass
 
     @sdproperty
     def image(self):
-        return self._image
+        pass
 
     @image.register(bytes)
     @image.register(bytearray)
     def image_bin(self, val):
-        self._image = bytearray(val)
+        pass
 
     def __init__(self):
         super(Image, self).__init__()

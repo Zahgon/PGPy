@@ -158,29 +158,20 @@ class PKESessionKeyV3(PKESessionKey):
 
     @sdproperty
     def encrypter(self):
-        return self._encrypter
+        pass
 
     @encrypter.register(bytearray)
     def encrypter_bin(self, val):
-        self._encrypter = binascii.hexlify(val).upper().decode('latin-1')
+        pass
 
     @sdproperty
     def pkalg(self):
-        return self._pkalg
+        pass
 
     @pkalg.register(int)
     @pkalg.register(PubKeyAlgorithm)
     def pkalg_int(self, val):
-        self._pkalg = PubKeyAlgorithm(val)
-
-        _c = {PubKeyAlgorithm.RSAEncryptOrSign: RSACipherText,
-              PubKeyAlgorithm.RSAEncrypt: RSACipherText,
-              PubKeyAlgorithm.ElGamal: ElGCipherText,
-              PubKeyAlgorithm.FormerlyElGamalEncryptOrSign: ElGCipherText,
-              PubKeyAlgorithm.ECDH: ECDHCipherText}
-
-        ct = _c.get(self._pkalg, None)
-        self.ct = ct() if ct is not None else ct
+        pass
 
     def __init__(self):
         super(PKESessionKeyV3, self).__init__()
@@ -207,67 +198,10 @@ class PKESessionKeyV3(PKESessionKey):
         return sk
 
     def decrypt_sk(self, pk):
-        if self.pkalg == PubKeyAlgorithm.RSAEncryptOrSign:
-            # pad up ct with null bytes if necessary
-            ct = self.ct.me_mod_n.to_mpibytes()[2:]
-            ct = b'\x00' * ((pk.keymaterial.__privkey__().key_size // 8) - len(ct)) + ct
-
-            decrypter = pk.keymaterial.__privkey__().decrypt
-            decargs = (ct, padding.PKCS1v15(),)
-
-        elif self.pkalg == PubKeyAlgorithm.ECDH:
-            decrypter = pk
-            decargs = ()
-
-        else:
-            raise NotImplementedError(self.pkalg)
-
-        m = bytearray(self.ct.decrypt(decrypter, *decargs))
-
-        """
-        The value "m" in the above formulas is derived from the session key
-        as follows.  First, the session key is prefixed with a one-octet
-        algorithm identifier that specifies the symmetric encryption
-        algorithm used to encrypt the following Symmetrically Encrypted Data
-        Packet.  Then a two-octet checksum is appended, which is equal to the
-        sum of the preceding session key octets, not including the algorithm
-        identifier, modulo 65536.  This value is then encoded as described in
-        PKCS#1 block encoding EME-PKCS1-v1_5 in Section 7.2.1 of [RFC3447] to
-        form the "m" value used in the formulas above.  See Section 13.1 of
-        this document for notes on OpenPGP's use of PKCS#1.
-        """
-
-        symalg = SymmetricKeyAlgorithm(m[0])
-        del m[0]
-
-        symkey = m[:symalg.key_size // 8]
-        del m[:symalg.key_size // 8]
-
-        checksum = self.bytes_to_int(m[:2])
-        del m[:2]
-
-        if not sum(symkey) % 65536 == checksum:  # pragma: no cover
-            raise PGPDecryptionError("{:s} decryption failed".format(self.pkalg.name))
-
-        return (symalg, symkey)
+        pass
 
     def encrypt_sk(self, pk, symalg, symkey):
-        m = bytearray(self.int_to_bytes(symalg) + symkey)
-        m += self.int_to_bytes(sum(bytearray(symkey)) % 65536, 2)
-
-        if self.pkalg == PubKeyAlgorithm.RSAEncryptOrSign:
-            encrypter = pk.keymaterial.__pubkey__().encrypt
-            encargs = (bytes(m), padding.PKCS1v15(),)
-
-        elif self.pkalg == PubKeyAlgorithm.ECDH:
-            encrypter = pk
-            encargs = (bytes(m),)
-
-        else:
-            raise NotImplementedError(self.pkalg)
-
-        self.ct = self.ct.encrypt(encrypter, *encargs)
-        self.update_hlen()
+        pass
 
     def parse(self, packet):
         super(PKESessionKeyV3, self).parse(packet)
@@ -342,45 +276,30 @@ class SignatureV4(Signature):
 
     @sdproperty
     def sigtype(self):
-        return self._sigtype
+        pass
 
     @sigtype.register(int)
     @sigtype.register(SignatureType)
     def sigtype_int(self, val):
-        self._sigtype = SignatureType(val)
+        pass
 
     @sdproperty
     def pubalg(self):
-        return self._pubalg
+        pass
 
     @pubalg.register(int)
     @pubalg.register(PubKeyAlgorithm)
     def pubalg_int(self, val):
-        self._pubalg = PubKeyAlgorithm(val)
-
-        sigs = {
-            PubKeyAlgorithm.RSAEncryptOrSign: RSASignature,
-            PubKeyAlgorithm.RSAEncrypt: RSASignature,
-            PubKeyAlgorithm.RSASign: RSASignature,
-            PubKeyAlgorithm.DSA: DSASignature,
-            PubKeyAlgorithm.ECDSA: ECDSASignature,
-            PubKeyAlgorithm.EdDSA: EdDSASignature,
-        }
-
-        self.signature = sigs.get(self.pubalg, OpaqueSignature)()
+        pass
 
     @sdproperty
     def halg(self):
-        return self._halg
+        pass
 
     @halg.register(int)
     @halg.register(HashAlgorithm)
     def halg_int(self, val):
-        try:
-            self._halg = HashAlgorithm(val)
-
-        except ValueError:  # pragma: no cover
-            self._halg = val
+        pass
 
     @property
     def signature(self):
@@ -392,7 +311,7 @@ class SignatureV4(Signature):
 
     @property
     def signer(self):
-        return self.subpackets['Issuer'][-1].issuer
+        pass
 
     def __init__(self):
         super(Signature, self).__init__()
@@ -429,20 +348,7 @@ class SignatureV4(Signature):
         of the Signature packet being hashed is not included in the hash, and
         the unhashed subpacket data length value is set to zero.
         '''
-        _body = bytearray()
-        _body += self.int_to_bytes(self.header.version)
-        _body += self.int_to_bytes(self.sigtype)
-        _body += self.int_to_bytes(self.pubalg)
-        _body += self.int_to_bytes(self.halg)
-        _body += self.subpackets.__hashbytearray__()
-        _body += self.int_to_bytes(0, minlen=2)  # empty unhashed subpackets
-        _body += self.hash2
-        _body += self.signature.__bytearray__()
-
-        _hdr = bytearray()
-        _hdr += b'\x88'
-        _hdr += self.int_to_bytes(len(_body), minlen=4)
-        return _hdr + _body
+        pass
 
     def __copy__(self):
         spkt = SignatureV4()
@@ -548,7 +454,7 @@ class SKESessionKeyV4(SKESessionKey):
 
     @property
     def symalg(self):
-        return self.s2k.encalg
+        pass
 
     def __init__(self):
         super(SKESessionKeyV4, self).__init__()
@@ -582,32 +488,11 @@ class SKESessionKeyV4(SKESessionKey):
 
     def decrypt_sk(self, passphrase):
         # derive the first session key from our passphrase
-        sk = self.s2k.derive_key(passphrase)
-        del passphrase
-
-        # if there is no ciphertext, then the first session key is the session key being used
-        if len(self.ct) == 0:
-            return self.symalg, sk
-
-        # otherwise, we now need to decrypt the encrypted session key
-        m = bytearray(_decrypt(bytes(self.ct), sk, self.symalg))
-        del sk
-
-        symalg = SymmetricKeyAlgorithm(m[0])
-        del m[0]
-
-        return symalg, bytes(m)
+        pass
 
     def encrypt_sk(self, passphrase, sk):
         # generate the salt and derive the key to encrypt sk with from it
-        self.s2k.salt = bytearray(os.urandom(8))
-        esk = self.s2k.derive_key(passphrase)
-        del passphrase
-
-        self.ct = _encrypt(self.int_to_bytes(self.symalg) + sk, esk, self.symalg)
-
-        # update header length and return sk
-        self.update_hlen()
+        pass
 
 
 class OnePassSignature(VersionedPacket):
@@ -656,52 +541,43 @@ class OnePassSignatureV3(OnePassSignature):
 
     @sdproperty
     def sigtype(self):
-        return self._sigtype
+        pass
 
     @sigtype.register(int)
     @sigtype.register(SignatureType)
     def sigtype_int(self, val):
-        self._sigtype = SignatureType(val)
+        pass
 
     @sdproperty
     def pubalg(self):
-        return self._pubalg
+        pass
 
     @pubalg.register(int)
     @pubalg.register(PubKeyAlgorithm)
     def pubalg_int(self, val):
-        self._pubalg = PubKeyAlgorithm(val)
-        if self._pubalg in [PubKeyAlgorithm.RSAEncryptOrSign, PubKeyAlgorithm.RSAEncrypt, PubKeyAlgorithm.RSASign]:
-            self.signature = RSASignature()
-
-        elif self._pubalg == PubKeyAlgorithm.DSA:
-            self.signature = DSASignature()
+        pass
 
     @sdproperty
     def halg(self):
-        return self._halg
+        pass
 
     @halg.register(int)
     @halg.register(HashAlgorithm)
     def halg_int(self, val):
-        try:
-            self._halg = HashAlgorithm(val)
-
-        except ValueError:  # pragma: no cover
-            self._halg = val
+        pass
 
     @sdproperty
     def signer(self):
-        return self._signer
+        pass
 
     @signer.register(str)
     @signer.register(str)
     def signer_str(self, val):
-        self._signer = val
+        pass
 
     @signer.register(bytearray)
     def signer_bin(self, val):
-        self._signer = binascii.hexlify(val).upper().decode('latin-1')
+        pass
 
     def __init__(self):
         super(OnePassSignatureV3, self).__init__()
@@ -758,92 +634,43 @@ class PubKeyV4(PubKey):
 
     @sdproperty
     def created(self):
-        return self._created
+        pass
 
     @created.register(datetime)
     def created_datetime(self, val):
-        if val.tzinfo is None:
-            warnings.warn("Passing TZ-naive datetime object to PubKeyV4 packet")
-        self._created = val
+        pass
 
     @created.register(int)
     def created_int(self, val):
-        self.created = datetime.fromtimestamp(val, timezone.utc)
+        pass
 
     @created.register(bytes)
     @created.register(bytearray)
     def created_bin(self, val):
-        self.created = self.bytes_to_int(val)
+        pass
 
     @sdproperty
     def pkalg(self):
-        return self._pkalg
+        pass
 
     @pkalg.register(int)
     @pkalg.register(PubKeyAlgorithm)
     def pkalg_int(self, val):
-        self._pkalg = PubKeyAlgorithm(val)
-
-        _c = {
-            # True means public
-            (True, PubKeyAlgorithm.RSAEncryptOrSign): RSAPub,
-            (True, PubKeyAlgorithm.RSAEncrypt): RSAPub,
-            (True, PubKeyAlgorithm.RSASign): RSAPub,
-            (True, PubKeyAlgorithm.DSA): DSAPub,
-            (True, PubKeyAlgorithm.ElGamal): ElGPub,
-            (True, PubKeyAlgorithm.FormerlyElGamalEncryptOrSign): ElGPub,
-            (True, PubKeyAlgorithm.ECDSA): ECDSAPub,
-            (True, PubKeyAlgorithm.ECDH): ECDHPub,
-            (True, PubKeyAlgorithm.EdDSA): EdDSAPub,
-            # False means private
-            (False, PubKeyAlgorithm.RSAEncryptOrSign): RSAPriv,
-            (False, PubKeyAlgorithm.RSAEncrypt): RSAPriv,
-            (False, PubKeyAlgorithm.RSASign): RSAPriv,
-            (False, PubKeyAlgorithm.DSA): DSAPriv,
-            (False, PubKeyAlgorithm.ElGamal): ElGPriv,
-            (False, PubKeyAlgorithm.FormerlyElGamalEncryptOrSign): ElGPriv,
-            (False, PubKeyAlgorithm.ECDSA): ECDSAPriv,
-            (False, PubKeyAlgorithm.ECDH): ECDHPriv,
-            (False, PubKeyAlgorithm.EdDSA): EdDSAPriv,
-        }
-
-        k = (self.public, self.pkalg)
-        km = _c.get(k, None)
-
-        self.keymaterial = (km or (OpaquePubKey if self.public else OpaquePrivKey))()
+        pass
 
         # km = _c.get(k, None)
         # self.keymaterial = km() if km is not None else km
 
     @property
     def public(self):
-        return isinstance(self, PubKey) and not isinstance(self, PrivKey)
+        pass
 
     @property
     def fingerprint(self):
         # A V4 fingerprint is the 160-bit SHA-1 hash of the octet 0x99, followed by the two-octet packet length,
         # followed by the entire Public-Key packet starting with the version field.  The Key ID is the
         # low-order 64 bits of the fingerprint.
-        fp = hashlib.new('sha1')
-
-        plen = self.keymaterial.publen()
-        bcde_len = self.int_to_bytes(6 + plen, 2)
-
-        # a.1) 0x99 (1 octet)
-        # a.2) high-order length octet
-        # a.3) low-order length octet
-        fp.update(b'\x99' + bcde_len[:1] + bcde_len[-1:])
-        # b) version number = 4 (1 octet);
-        fp.update(b'\x04')
-        # c) timestamp of key creation (4 octets);
-        fp.update(self.int_to_bytes(calendar.timegm(self.created.timetuple()), 4))
-        # d) algorithm (1 octet): 17 = DSA (example);
-        fp.update(self.int_to_bytes(self.pkalg))
-        # e) Algorithm-specific fields.
-        fp.update(self.keymaterial.__bytearray__()[:plen])
-
-        # and return the digest
-        return Fingerprint(fp.hexdigest().upper())
+        pass
 
     def __init__(self):
         super(PubKeyV4, self).__init__()
@@ -869,7 +696,7 @@ class PubKeyV4(PubKey):
         return pk
 
     def verify(self, subj, sigbytes, hash_alg):
-        return self.keymaterial.verify(subj, sigbytes, hash_alg)
+        pass
 
     def parse(self, packet):
         super(PubKeyV4, self).parse(packet)
@@ -904,45 +731,24 @@ class PrivKeyV4(PrivKey, PubKeyV4):
 
     def pubkey(self):
         # return a copy of ourselves, but just the public half
-        pk = PubKeyV4() if not isinstance(self, PrivSubKeyV4) else PubSubKeyV4()
-        pk.created = self.created
-        pk.pkalg = self.pkalg
-
-        # copy over MPIs
-        for pm in self.keymaterial.__pubfields__:
-            setattr(pk.keymaterial, pm, copy.copy(getattr(self.keymaterial, pm)))
-
-        if self.pkalg in {PubKeyAlgorithm.ECDSA, PubKeyAlgorithm.EdDSA}:
-            pk.keymaterial.oid = self.keymaterial.oid
-
-        if self.pkalg == PubKeyAlgorithm.ECDH:
-            pk.keymaterial.oid = self.keymaterial.oid
-            pk.keymaterial.kdf = copy.copy(self.keymaterial.kdf)
-
-        pk.update_hlen()
-        return pk
+        pass
 
     @property
     def protected(self):
-        return bool(self.keymaterial.s2k)
+        pass
 
     @property
     def unlocked(self):
-        if self.protected:
-            return 0 not in list(self.keymaterial)
-        return True  # pragma: no cover
+        pass
 
     def protect(self, passphrase, enc_alg, hash_alg):
-        self.keymaterial.encrypt_keyblob(passphrase, enc_alg, hash_alg)
-        del passphrase
-        self.update_hlen()
+        pass
 
     def unprotect(self, passphrase):
-        self.keymaterial.decrypt_keyblob(passphrase)
-        del passphrase
+        pass
 
     def sign(self, sigdata, hash_alg):
-        return self.keymaterial.sign(sigdata, hash_alg)
+        pass
 
 
 class PrivSubKey(VersionedPacket, Sub, Private):
@@ -988,12 +794,12 @@ class CompressedData(Packet):
 
     @sdproperty
     def calg(self):
-        return self._calg
+        pass
 
     @calg.register(int)
     @calg.register(CompressionAlgorithm)
     def calg_int(self, val):
-        self._calg = CompressionAlgorithm(val)
+        pass
 
     def __init__(self):
         super(CompressedData, self).__init__()
@@ -1091,24 +897,7 @@ class SKEData(Packet):
         del packet[:self.header.length]
 
     def decrypt(self, key, alg):  # pragma: no cover
-        block_size_bytes = alg.block_size // 8
-        pt_prefix = _decrypt(bytes(self.ct[:block_size_bytes + 2]), bytes(key), alg)
-
-        # old Symmetrically Encrypted Data Packet required
-        # to change iv after decrypting prefix
-        iv_resync = bytes(self.ct[2:block_size_bytes + 2])
-
-        iv = bytes(pt_prefix[:block_size_bytes])
-        del pt_prefix[:block_size_bytes]
-
-        ivl2 = bytes(pt_prefix[:2])
-
-        if not constant_time.bytes_eq(iv[-2:], ivl2):
-            raise PGPDecryptionError("Decryption failed")
-
-        pt = _decrypt(bytes(self.ct[block_size_bytes + 2:]), bytes(key), alg, iv=iv_resync)
-
-        return pt
+        pass
 
 
 class Marker(Packet):
@@ -1180,32 +969,24 @@ class LiteralData(Packet):
 
     @sdproperty
     def mtime(self):
-        return self._mtime
+        pass
 
     @mtime.register(datetime)
     def mtime_datetime(self, val):
-        if val.tzinfo is None:
-            warnings.warn("Passing TZ-naive datetime object to LiteralData packet")
-        self._mtime = val
+        pass
 
     @mtime.register(int)
     def mtime_int(self, val):
-        self.mtime = datetime.fromtimestamp(val, timezone.utc)
+        pass
 
     @mtime.register(bytes)
     @mtime.register(bytearray)
     def mtime_bin(self, val):
-        self.mtime = self.bytes_to_int(val)
+        pass
 
     @property
     def contents(self):
-        if self.format == 't':
-            return self._contents.decode('latin-1')
-
-        if self.format == 'u':
-            return self._contents.decode('utf-8')
-
-        return self._contents
+        pass
 
     def __init__(self):
         super(LiteralData, self).__init__()
@@ -1271,24 +1052,24 @@ class Trust(Packet):
 
     @sdproperty
     def trustlevel(self):
-        return self._trustlevel
+        pass
 
     @trustlevel.register(int)
     @trustlevel.register(TrustLevel)
     def trustlevel_int(self, val):
-        self._trustlevel = TrustLevel(val & 0x0F)
+        pass
 
     @sdproperty
     def trustflags(self):
-        return self._trustflags
+        pass
 
     @trustflags.register(list)
     def trustflags_list(self, val):
-        self._trustflags = val
+        pass
 
     @trustflags.register(int)
     def trustflags_int(self, val):
-        self._trustflags = TrustFlags & val
+        pass
 
     def __init__(self):
         super(Trust, self).__init__()
@@ -1401,9 +1182,7 @@ class UserAttribute(Packet):
 
     @property
     def image(self):
-        if 'Image' not in self.subpackets:
-            self.subpackets.addnew('Image')
-        return next(iter(self.subpackets['Image']))
+        pass
 
     def __init__(self):
         super(UserAttribute, self).__init__()
@@ -1555,36 +1334,11 @@ class IntegrityProtectedSKEDataV1(IntegrityProtectedSKEData):
         del packet[:self.header.length - 1]
 
     def encrypt(self, key, alg, data):
-        iv = alg.gen_iv()
-        data = iv + iv[-2:] + data
-
-        mdc = MDC()
-        mdc.mdc = binascii.hexlify(hashlib.new('SHA1', data + b'\xd3\x14').digest())
-        mdc.update_hlen()
-
-        data += mdc.__bytes__()
-        self.ct = _encrypt(data, key, alg)
-        self.update_hlen()
+        pass
 
     def decrypt(self, key, alg):
         # iv, ivl2, pt = super(IntegrityProtectedSKEDataV1, self).decrypt(key, alg)
-        pt = _decrypt(bytes(self.ct), bytes(key), alg)
-
-        # do the MDC checks
-        _expected_mdcbytes = b'\xd3\x14' + hashlib.new('SHA1', pt[:-20]).digest()
-        if not constant_time.bytes_eq(bytes(pt[-22:]), _expected_mdcbytes):
-            raise PGPDecryptionError("Decryption failed")  # pragma: no cover
-
-        iv = bytes(pt[:alg.block_size // 8])
-        del pt[:alg.block_size // 8]
-
-        ivl2 = bytes(pt[:2])
-        del pt[:2]
-
-        if not constant_time.bytes_eq(iv[-2:], ivl2):
-            raise PGPDecryptionError("Decryption failed")  # pragma: no cover
-
-        return pt
+        pass
 
 
 class MDC(Packet):

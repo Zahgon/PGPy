@@ -30,21 +30,16 @@ __all__ = ['Header',
 class Header(_Header):
     @sdproperty
     def tag(self):
-        return self._tag
+        pass
 
     @tag.register(int)
     @tag.register(PacketTag)
     def tag_int(self, val):
-        _tag = (val & 0x3F) if self._lenfmt else ((val & 0x3C) >> 2)
-        try:
-            self._tag = PacketTag(_tag)
-
-        except ValueError:  # pragma: no cover
-            self._tag = _tag
+        pass
 
     @property
     def typeid(self):
-        return self.tag
+        pass
 
     def __init__(self):
         super(Header, self).__init__()
@@ -116,11 +111,11 @@ class Header(_Header):
 class VersionedHeader(Header):
     @sdproperty
     def version(self):
-        return self._version
+        pass
 
     @version.register(int)
     def version_int(self, val):
-        self._version = val
+        pass
 
     def __init__(self):
         super(VersionedHeader, self).__init__()
@@ -187,12 +182,12 @@ class Opaque(Packet):
 
     @sdproperty
     def payload(self):
-        return self._payload
+        pass
 
     @payload.register(bytearray)
     @payload.register(bytes)
     def payload_bin(self, val):
-        self._payload = val
+        pass
 
     def __init__(self):
         super(Opaque, self).__init__()

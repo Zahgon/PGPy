@@ -70,11 +70,11 @@ class Armorable(metaclass=abc.ABCMeta):
 
     @property
     def charset(self):
-        return self.ascii_headers.get('Charset', 'utf-8')
+        pass
 
     @charset.setter
     def charset(self, encoding):
-        self.ascii_headers['Charset'] = codecs.lookup(encoding).name
+        pass
 
     @staticmethod
     def is_ascii(text):
@@ -94,10 +94,7 @@ class Armorable(metaclass=abc.ABCMeta):
         :raises: :py:exc:`TypeError` if ``text`` is not a ``str``, ``bytes``, or ``bytearray``
         :returns: Whether the text is ASCII-armored.
         """
-        if isinstance(text, (bytes, bytearray)):  # pragma: no cover
-            text = text.decode('latin-1')
-
-        return Armorable.__armor_regex.search(text) is not None
+        pass
 
     @staticmethod
     def ascii_unarmor(text):
@@ -190,17 +187,7 @@ class Armorable(metaclass=abc.ABCMeta):
 
     @classmethod
     def from_blob(cls, blob):
-        obj = cls()
-        if (not isinstance(blob, bytes)) and (not isinstance(blob, bytearray)):
-            po = obj.parse(bytearray(blob, 'latin-1'))
-
-        else:
-            po = obj.parse(bytearray(blob))
-
-        if po is not None:
-            return (obj, po)
-
-        return obj  # pragma: no cover
+        pass
 
     def __init__(self):
         super(Armorable, self).__init__()
@@ -228,21 +215,15 @@ class ParentRef(object):
     # mixin class to handle weak-referencing a parent object
     @property
     def _parent(self):
-        if isinstance(self.__parent, weakref.ref):
-            return self.__parent()
-        return self.__parent
+        pass
 
     @_parent.setter
     def _parent(self, parent):
-        try:
-            self.__parent = weakref.ref(parent)
-
-        except TypeError:
-            self.__parent = parent
+        pass
 
     @property
     def parent(self):
-        return self._parent
+        pass
 
     def __init__(self):
         super(ParentRef, self).__init__()
@@ -283,10 +264,7 @@ class PGPObject(metaclass=abc.ABCMeta):
 
     @staticmethod
     def bytes_to_text(text):
-        if text is None or isinstance(text, str):
-            return text
-
-        return text.decode('utf-8')
+        pass
 
     @abc.abstractmethod
     def parse(self, packet):
@@ -334,84 +312,24 @@ class Header(Field):
 
     @sdproperty
     def length(self):
-        return self._len
+        pass
 
     @length.register(int)
     def length_int(self, val):
-        self._len = val
+        pass
 
     @length.register(bytes)
     @length.register(bytearray)
     def length_bin(self, val):
-        def _new_len(b):
-            def _parse_len(a, offset=0):
-                # returns (the parsed length, size of length field, whether the length was of partial type)
-                fo = a[offset]
-
-                if 192 > fo:
-                    return (self.bytes_to_int(a[offset:offset + 1]), 1, False)
-
-                elif 224 > fo:  # >= 192 is implied
-                    dlen = self.bytes_to_int(b[offset:offset + 2])
-                    return (((dlen - (192 << 8)) & 0xFF00) + ((dlen & 0xFF) + 192), 2, False)
-
-                elif 255 > fo:  # >= 224 is implied
-                    # this is a partial-length header
-                    return (1 << (fo & 0x1f), 1, True)
-
-                elif 255 == fo:
-                    return (self.bytes_to_int(b[offset + 1:offset + 5]), 5, False)
-
-                else:  # pragma: no cover
-                    raise ValueError("Malformed length: 0x{:02x}".format(fo))
-
-            part_len, size, partial = _parse_len(b)
-            del b[:size]
-
-            if partial:
-                total = part_len
-                while partial:
-                    part_len, size, partial = _parse_len(b, total)
-                    del b[total:total + size]
-                    total += part_len
-                self._len = total
-            else:
-                self._len = part_len
-
-        def _old_len(b):
-            if self.llen > 0:
-                self._len = self.bytes_to_int(b[:self.llen])
-                del b[:self.llen]
-
-            else:  # pragma: no cover
-                self._len = 0
-
-        _new_len(val) if self._lenfmt == 1 else _old_len(val)
+        pass
 
     @sdproperty
     def llen(self):
-        lf = self._lenfmt
-
-        if lf == 1:
-            # new-format length
-            if 192 > self.length:
-                return 1
-
-            elif 8384 > self.length:  # >= 192 is implied
-                return 2
-
-            else:
-                return 5
-
-        else:
-            # old-format length
-            ##TODO: what if _llen needs to be (re)computed?
-            return self._llen
+        pass
 
     @llen.register(int)
     def llen_int(self, val):
-        if self._lenfmt == 0:
-            self._llen = {0: 1, 1: 2, 2: 4, 3: 0}[val]
+        pass
 
     def __init__(self):
         super(Header, self).__init__()
@@ -491,9 +409,7 @@ class MetaDispatchable(abc.ABCMeta):
 
     def __call__(cls, packet=None):  # NOQA
         def _makeobj(cls):
-            obj = object.__new__(cls)
-            obj.__init__()
-            return obj
+            pass
 
         if packet is not None:
             if cls in MetaDispatchable._roots:
@@ -578,12 +494,7 @@ class SignatureVerification(object):
 
         ``sigsubj.subject`` - the subject that was verified using the signature.
         """
-        yield from (
-            sigsub
-            for sigsub in self._subjects
-            if not sigsub.issues
-            or (sigsub.issues and not sigsub.issues.causes_signature_verify_to_fail)
-        )
+        pass
 
     @property
     def bad_signatures(self):  # pragma: no cover
@@ -599,11 +510,7 @@ class SignatureVerification(object):
 
         ``sigsubj.subject`` - the subject that was verified using the signature.
         """
-        yield from (
-            sigsub
-            for sigsub in self._subjects
-            if sigsub.issues and sigsub.issues.causes_signature_verify_to_fail
-        )
+        pass
 
     def __init__(self):
         """
@@ -645,10 +552,7 @@ class SignatureVerification(object):
         )
 
     def add_sigsubj(self, signature, by, subject=None, issues=None):
-        if issues is None:
-            from .constants import SecurityIssues
-            issues = SecurityIssues(0xFF)
-        self._subjects.append(self._sigsubj(issues, by, signature, subject))
+        pass
 
 
 class FlagEnumMeta(EnumMeta):
@@ -671,11 +575,11 @@ class Fingerprint(str):
     """
     @property
     def keyid(self):
-        return self[-16:]
+        pass
 
     @property
     def shortid(self):
-        return self[-8:]
+        pass
 
     def __new__(cls, content):
         if isinstance(content, Fingerprint):
@@ -732,25 +636,11 @@ class Fingerprint(str):
 class SorteDeque(collections.deque):
     """A deque subclass that tries to maintain sorted ordering using bisect"""
     def insort(self, item):
-        i = bisect.bisect_left(self, item)
-        self.rotate(- i)
-        self.appendleft(item)
-        self.rotate(i)
+        pass
 
     def resort(self, item):  # pragma: no cover
-        if item in self:
-            # if item is already in self, see if it is still in sorted order.
-            # if not, re-sort it by removing it and then inserting it into its sorted order
-            i = bisect.bisect_left(self, item)
-            if i == len(self) or self[i] is not item:
-                self.remove(item)
-                self.insort(item)
-
-        else:
-            # if item is not in self, just insert it in sorted order
-            self.insort(item)
+        pass
 
     def check(self):  # pragma: no cover
         """re-sort any items in self that are not sorted"""
-        for unsorted in iter(self[i] for i in range(len(self) - 2) if not operator.le(self[i], self[i + 1])):
-            self.resort(unsorted)
+        pass

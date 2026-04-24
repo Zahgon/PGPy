@@ -20,26 +20,24 @@ __all__ = ['Header',
 class Header(_Header):
     @sdproperty
     def critical(self):
-        return self._critical
+        pass
 
     @critical.register(bool)
     def critical_bool(self, val):
-        self._critical = val
+        pass
 
     @sdproperty
     def typeid(self):
-        return self._typeid
+        pass
 
     @typeid.register(int)
     def typeid_int(self, val):
-        self._typeid = val & 0x7f
+        pass
 
     @typeid.register(bytes)
     @typeid.register(bytearray)
     def typeid_bin(self, val):
-        v = self.bytes_to_int(val)
-        self.typeid = v
-        self.critical = bool(v & 0x80)
+        pass
 
     def __init__(self):
         super(Header, self).__init__()
@@ -115,12 +113,12 @@ class Opaque(Signature, UserAttribute):
 
     @sdproperty
     def payload(self):
-        return self._payload
+        pass
 
     @payload.register(bytes)
     @payload.register(bytearray)
     def payload_bin(self, val):
-        self._payload = bytearray(val)
+        pass
 
     def __init__(self):
         super(Opaque, self).__init__()
